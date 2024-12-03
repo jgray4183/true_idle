@@ -1,4 +1,4 @@
-from constants import BASE_GEN, BASE_PRICE
+from constants import BASE_GEN, BASE_PRICE, DISCOUNT
 
 #Generators are the main way of genirating points, they start with values bassed on constants and there tier
 
@@ -34,6 +34,15 @@ class Generator():
             points_output = points - (self.price)
             return points_output
 
+    def buy_discount(self, points):
+        if int((self.price * DISCOUNT)//1) > points:
+            raise Exception("not enough points")
+            return points
+        else:
+            self.amount += 1
+            points_output = points - (int((self.price * DISCOUNT)//1))
+            return points_output
+
 #Through the game genirators will pristege to genirate more points at a higher cost bassed on what there previous gen ammount and cost were
 
 class PristegedGenerator(Generator):
@@ -43,7 +52,6 @@ class PristegedGenerator(Generator):
         self.price = int((gen.price * 1.25)//1)
         self.pristege = gen.pristege + 1
         self.pristege_cost = int((gen.pristege_cost * 1.5)//1)
-        print (f"Generator {self.tier} has reached Pristege {self.pristege}")
 
     def __str__(self):
         return f"Pristege {self.pristege} Tier {self.tier} Generator"
@@ -66,7 +74,16 @@ class Upgrade():
             self.tier += 1
             points_local = points - self.price
             self.price *= self.multiplier
-            print (f"{self.name} Upgraded")
+            return points_local
+
+    def buy_discount(self, points):
+        if (int((self.price * DISCOUNT)//1)) > points:
+            raise Exception("not enough points")
+            return points
+        else:
+            self.tier += 1
+            points_local = points - (int((self.price * DISCOUNT)//1))
+            self.price *= self.multiplier
             return points_local
 
 #Some upgrades have to store a value beyond there tier this allows they to add and "spend" that value
@@ -96,5 +113,15 @@ class UpgradeStoreValue(Upgrade):
             points_local = points - self.price
             self.value_max *= self.multiplier
             self.price *= self.multiplier
-            print (f"{self.name} Upgraded")
-            return points_local    
+            return points_local
+
+    def buy_discount(self, points):
+        if (int((self.price * DISCOUNT)//1)) > points:
+            raise Exception("not enough points")
+            return points
+        else:
+            self.tier += 1
+            points_local = points - (int((self.price * DISCOUNT)//1))
+            self.value_max *= self.multiplier
+            self.price *= self.multiplier
+            return points_local 
