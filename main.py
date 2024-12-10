@@ -7,25 +7,19 @@ import pickle
 #if a save exists import it otherwise start the game new
 save = []
 try:
-    save_file = open("save.txt", "r")
-    save_str = save_file.read()
-    save = save_str.split(", ")
+    with open("save.pkl", "rb") as fp:
+        save = pickle.load(fp)
 except Exception as e:
     pass
 
-if len(save) == 5:
+if len(save) == 7:
     points = int(save[0])
     max_pristege = int(save[1])
     double_gen_ticks = int(save[2])
     tickspeed_boost_ticks = int(save[3])
-    if save[4] == "True":
-        points_discount_boolean = True
-    else:
-        points_discount_boolean = False
-    with open("gen_save.pkl", "rb") as fp:
-        gen_list = pickle.load(fp)
-    with open("upgrade_save.pkl", "rb") as fp:
-        upgrade_dict = pickle.load(fp)
+    points_discount_boolean = save[4]
+    gen_list = save[5]
+    upgrade_dict = save[6]
 else:
     points = 0 
     max_pristege = 5
@@ -217,26 +211,13 @@ def main():
         #saves the game with any veriables stored as txt and lists or dictronarys pickled
         save_countdown -= 1
         if save_countdown == 0:
-            save = f"{points}, {max_pristege}, {double_gen_ticks}, {tickspeed_boost_ticks}, {points_discount_boolean}"
-            try:
-                save_file = open("save.txt", "x")
-                save_file.write(save)
-            except Exception as e:
-                save_file = open("save.txt", "w")
-                save_file.write(f"{save}")
-                save_file.close()
+            save = [points, max_pristege, double_gen_ticks, tickspeed_boost_ticks, points_discount_boolean, gen_list, upgrade_dict]
             try:    
-                with open("gen_save.pkl", "xb") as fp:
-                    pickle.dump(gen_list, fp, protocol=pickle.HIGHEST_PROTOCOL)
+                with open("save.pkl", "xb") as fp:
+                    pickle.dump(save, fp, protocol=pickle.HIGHEST_PROTOCOL)
             except Exception as e:
-                with open("gen_save.pkl", "wb") as fp:
-                    pickle.dump(gen_list, fp, protocol=pickle.HIGHEST_PROTOCOL)
-            try:
-                with open("upgrade_save.pkl", "xb") as fp:
-                    pickle.dump(upgrade_dict, fp, protocol=pickle.HIGHEST_PROTOCOL)
-            except Exception as e:
-                with open("upgrade_save.pkl", "wb") as fp:
-                    pickle.dump(upgrade_dict, fp, protocol=pickle.HIGHEST_PROTOCOL)
+                with open("save.pkl", "wb") as fp:
+                    pickle.dump(save, fp, protocol=pickle.HIGHEST_PROTOCOL)
             save_countdown = 60
 
 #below this line is all for output

@@ -1,6 +1,4 @@
 test.py
 testlog.txt
-save.txt
-gen_save.pkl
-upgrade_save.pkl
+save.pkl
 /__pycache__
