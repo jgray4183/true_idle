@@ -38,6 +38,12 @@ ultra_rare_events = ["increase max pristege", "double gen for rounds", "unlock n
 medium_rare_events = ["free upgrade", "free gens", "double savings"]
 normal_rare_events = ["points discount", "tickspeed boost", "double points"]
 
+testlog = open("testlog.txt", "a")
+testlog.write(f"Save {time.localtime()}")
+for gen in gen_list:
+    testlog.write(f"\n{gen} {gen.gen_price_ratio} {gen.gen_val} {gen.price}")
+testlog.close()
+
 #this function saves the game as a pickled list and creates a save if one dosen't exist
 def save_game():
     save = [points, max_pristege, double_gen_ticks, tickspeed_boost_ticks, points_discount_boolean, gen_list, upgrade_dict]
@@ -54,7 +60,7 @@ def new_generator(points):
     gen_list.append(Generator(new_gen_number))
     points_cost = gen_list[-1].price - upgrade_dict["unlock_bank"].value
     if gen_list[-1].price > upgrade_dict["unlock_bank"].value:
-        upgrade_dict["unlock_bank"].value -= gen_list[-1].price - points_cost
+        upgrade_dict["unlock_bank"].value -= (gen_list[-1].price - points_cost)
         return points_cost
     upgrade_dict["unlock_bank"].value -= gen_list[-1].price
     return 0
@@ -125,7 +131,7 @@ def free_upgrade():
 
 def free_gens():
     for gen in gen_list:
-        gen.amount += int(gen.amount * 1.1 // 1)
+        gen.amount += int(gen.amount * 1.1)
     return "All gen amounts increased by 10%"
 
 def double_savings():
@@ -157,21 +163,22 @@ def main():
             #reset any veriables that should only act for one tick
             points_discount = False
             #random events to stop the game being determanistic
-            if random.randint(1, 100) == 100:
+            if random.randint(1 + 40 - (len(gen_list) * 4), 100) == 100:
                 event_log = random_event_genirator(event_log)
             #take readings so I can report output changes
-            points_start = points
+            points_generated = 0
             gen_number_start = len(gen_list)
             #generate points for each generator and add 2% of the new points to the upgrade bank, runs a second time if the points genirated are being doubled
             for gen in gen_list:
                 points += gen.generate()
+                points_generated += gen.generate()
             if double_gen_ticks > 0:
                 for gen in gen_list:
                     points += gen.generate()
+                    points_generated += gen.generate()
                 double_gen_ticks -= 1
-            points -= upgrade_dict["unlock_bank"].add_value(int((points/50)//1))
+            points -= upgrade_dict["unlock_bank"].add_value(int(points/50))
             #take readings for how many points have been genirated then reset point starts to track points spent
-            points_generated = points - points_start
             points_start = points
             #pristege a generator if possible
             for gen in gen_list:
@@ -179,36 +186,36 @@ def main():
                     gen_list.append(PristegedGenerator(gen))
                     gen_list.remove(gen)
                     event_log.append(f"Generator {gen_list[-1].tier} has reached Pristege {gen_list[-1].pristege}")
-                    gen_list.sort(key=lambda gens:gens.gen_val)
+                    gen_list.sort(key=lambda gens:gens.gen_price_ratio)
             #unlock new generator if possible
-            if points + upgrade_dict["unlock_bank"].value >= BASE_PRICE ** (len(gen_list) + 1):
+            if points + upgrade_dict["unlock_bank"].value >= int((BASE_PRICE * (len(gen_list) + 1)) ** ((len(gen_list) + 1) - ((len(gen_list) + 1) / 2))):
                 points -= new_generator(points)
                 event_log.append(f"Tier {len(gen_list)} unlocked")
-                gen_list.sort(key=lambda gens:gens.gen_val)
+                gen_list.sort(key=lambda gens:gens.gen_price_ratio)
             #buy upgrades as they are fewer and more impactful than gens, trying to buy with a discount first then at full price if discount isn't active
             if points_discount_boolean == True:
                 for upgrade in upgrade_dict:
                     if points >= (upgrade_dict[upgrade].price * DISCOUNT) and upgrade_dict[upgrade].tier < upgrade_dict[upgrade].max:
-                        upgrade_dict[upgrade].buy_discount(points)
+                        points = upgrade_dict[upgrade].buy_discount(points)
                         event_log.append(f"{upgrade_dict[upgrade].name} Upgraded to rank {upgrade_dict[upgrade].tier}")
             else:
                 for upgrade in upgrade_dict:
                     if points >= upgrade_dict[upgrade].price and upgrade_dict[upgrade].tier < upgrade_dict[upgrade].max:
-                        upgrade_dict[upgrade].buy(points)
+                        points = upgrade_dict[upgrade].buy(points)
                         event_log.append(f"{upgrade_dict[upgrade].name} Upgraded to rank {upgrade_dict[upgrade].tier}")
             #buy buy max of each generator that can be afforded starting at higest genirating, trying to buy with a discount first then at full price if discount isn't active
             if points_discount_boolean == True:
-                for gen in reversed(gen_list):
+                for gen in (gen_list):
                     if points >= gen.price * DISCOUNT:
                         buy_amount = int(points // gen.price)
                         if upgrade_dict["buy_amount"].tier < buy_amount:
                             buy_amount = upgrade_dict["buy_amount"].tier
-                        buy_cost = buy_amount * int((gen.price * DISCOUNT)//1)
+                        buy_cost = buy_amount * int(gen.price * DISCOUNT)
                         for i in range(buy_amount):
                             gen.buy_discount(points)
                         points -= buy_cost
             else:
-                for gen in reversed(gen_list):
+                for gen in (gen_list):
                     if points >= gen.price:
                         buy_amount = int(points // gen.price)
                         if upgrade_dict["buy_amount"].tier < buy_amount:
@@ -224,8 +231,13 @@ def main():
             save_countdown -= 1
             if save_countdown == 0:
                 save_game()
+                testlog = open("testlog.txt", "a")
+                testlog.write(f"\n Save {time.localtime()}")
+                for gen in gen_list:
+                    testlog.write(f"\n{gen} {gen.gen_price_ratio} {gen.gen_val} {gen.price}")
+                testlog.close()
                 #this sacles with tickspeed to keep the auto saves roughly every 30 seconds
-                save_countdown = int(30 * (upgrade_dict["tickspeed"].tier / (16 + (2/3))))
+                save_countdown = int(30 + (upgrade_dict["tickspeed"].tier / (1 + (2/3))))
                 if save_countdown > 60:
                     save_countdown = 60
 
@@ -235,7 +247,7 @@ def main():
             for gen in gen_list:
                 total_gens += gen.amount
 
-            highest_gen = gen_list[-1]
+            highest_gen = gen_list[0]
 
             print ("============================================================")
 
@@ -245,7 +257,7 @@ def main():
                     pass
                 else:
                     print (event)
-            
+
             #this prints the points genirated, points spent if any were, running genirator count, and points total so this statement will print every tick, conditions to keep grama correct and provent empty statements
             if highest_gen.amount == 1:
                 if points_spent > 0:

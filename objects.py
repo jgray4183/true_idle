@@ -7,20 +7,31 @@ class Generator():
         self.tier = tier
         self.amount = 1
         self.pristege = 0
-        self.pristege_cost = 100
+        self.pristege_cost = 150
         self.gen_val = None
         self.price = None
+        self.gen_price_ratio = None
         self.get_gen()
         self.get_price()
+        self.get_ratio()
 
     def __str__(self):
         return f"Tier {self.tier} Generator"
 
     def get_gen(self):
-        self.gen_val = BASE_GEN * (self.tier ** 2)
+        if self.tier > 1:
+            self.gen_val = int((BASE_GEN + self.tier - 1) * ((self.tier - (self.tier / 2)) ** 3))
+        else:
+            self.gen_val = BASE_GEN ** self.tier
 
     def get_price(self):
-        self.price = BASE_PRICE ** self.tier
+        if self.tier > 1:
+            self.price = int((BASE_PRICE * self.tier) ** (self.tier - (self.tier / 2)))
+        else:
+            self.price = BASE_PRICE ** self.tier
+    
+    def get_ratio(self):
+        self.gen_price_ratio = self.price / self.gen_val
 
     def generate(self):
         return self.gen_val * self.amount
@@ -35,12 +46,12 @@ class Generator():
             return points_output
 
     def buy_discount(self, points):
-        if int((self.price * DISCOUNT)//1) > points:
+        if int(self.price * DISCOUNT) > points:
             raise Exception("not enough points")
             return points
         else:
             self.amount += 1
-            points_output = points - (int((self.price * DISCOUNT)//1))
+            points_output = points - int(self.price * DISCOUNT)
             return points_output
 
 #Through the game genirators will pristege to genirate more points at a higher cost bassed on what there previous gen ammount and cost were
@@ -48,10 +59,11 @@ class Generator():
 class PristegedGenerator(Generator):
     def __init__(self, gen):
         super().__init__(gen.tier)
-        self.gen_val = int((gen.gen_val * 1.5)//1)
-        self.price = int((gen.price * 1.25)//1)
+        self.gen_val = int((gen.gen_val + gen.tier) * 1.5)
+        self.price = int((gen.price + gen.tier) * 1.10)
         self.pristege = gen.pristege + 1
-        self.pristege_cost = int((gen.pristege_cost * 1.5)//1)
+        self.pristege_cost = int(gen.pristege_cost * 1.5)
+        self.get_ratio()
 
     def __str__(self):
         return f"Pristege {self.pristege} Tier {self.tier} Generator"
@@ -73,7 +85,7 @@ class Upgrade():
         else:
             self.tier += 1
             points_local = points - self.price
-            self.price *= self.multiplier
+            self.price = int(self.price * self.multiplier)
             return points_local
 
     def buy_discount(self, points):
@@ -82,8 +94,8 @@ class Upgrade():
             return points
         else:
             self.tier += 1
-            points_local = points - (int((self.price * DISCOUNT)//1))
-            self.price *= self.multiplier
+            points_local = points - int(self.price * DISCOUNT)
+            self.price = int(self.price * self.multiplier)
             return points_local
 
 #Some upgrades have to store a value beyond there tier this allows they to add and "spend" that value
@@ -111,8 +123,8 @@ class UpgradeStoreValue(Upgrade):
         else:
             self.tier += 1
             points_local = points - self.price
-            self.value_max *= self.multiplier
-            self.price *= self.multiplier
+            self.value_max = int(self.value_max * self.multiplier)
+            self.price = int(self.price * self.multiplier)
             return points_local
 
     def buy_discount(self, points):
@@ -121,7 +133,7 @@ class UpgradeStoreValue(Upgrade):
             return points
         else:
             self.tier += 1
-            points_local = points - (int((self.price * DISCOUNT)//1))
-            self.value_max *= self.multiplier
-            self.price *= self.multiplier
+            points_local = points - int(self.price * DISCOUNT)
+            self.value_max = int(self.value_max * self.multiplier)
+            self.price = int(self.price * self.multiplier)
             return points_local 
