@@ -38,12 +38,6 @@ ultra_rare_events = ["increase max pristege", "double gen for rounds", "unlock n
 medium_rare_events = ["free upgrade", "free gens", "double savings"]
 normal_rare_events = ["points discount", "tickspeed boost", "double points"]
 
-testlog = open("testlog.txt", "a")
-testlog.write(f"Save {time.localtime()}")
-for gen in gen_list:
-    testlog.write(f"\n{gen} {gen.gen_price_ratio} {gen.gen_val} {gen.price}")
-testlog.close()
-
 #this function saves the game as a pickled list and creates a save if one dosen't exist
 def save_game():
     save = [points, max_pristege, double_gen_ticks, tickspeed_boost_ticks, points_discount_boolean, gen_list, upgrade_dict]
@@ -231,11 +225,6 @@ def main():
             save_countdown -= 1
             if save_countdown == 0:
                 save_game()
-                testlog = open("testlog.txt", "a")
-                testlog.write(f"\n Save {time.localtime()}")
-                for gen in gen_list:
-                    testlog.write(f"\n{gen} {gen.gen_price_ratio} {gen.gen_val} {gen.price}")
-                testlog.close()
                 #this sacles with tickspeed to keep the auto saves roughly every 30 seconds
                 save_countdown = int(30 + (upgrade_dict["tickspeed"].tier / (1 + (2/3))))
                 if save_countdown > 60:
