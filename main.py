@@ -1,8 +1,18 @@
-from objects import *
+from objects import Generator, PrestigedGenerator, Upgrade, UpgradeStoreValue
 from constants import BASE_PRICE, DISCOUNT
+from askii import *
 import time
 import random
 import pickle
+
+def initilise_gens():
+    gen_list = []
+    for i in range(1, ascenssion_dict["starting_gen_amount"] + 1):
+        gen_list.append(Generator(i, ascenssion_dict))
+    return gen_list
+
+def initilise_upgrades():
+    return {"buy_amount" : Upgrade("Buy Amount", ascenssion_dict, 25, 3, 100 + ascenssion_dict["upgrade_scale"]), "tickspeed" : Upgrade("Tickspeed", ascenssion_dict, 100, 100, 25 + ascenssion_dict["upgrade_scale"]), "unlock_bank" : UpgradeStoreValue("Unlock Bank", ascenssion_dict, 250, 5, 100 + ascenssion_dict["upgrade_scale"], 50)}
 
 #if a save exists import it otherwise start the game new
 save = []
@@ -12,35 +22,39 @@ try:
 except Exception as e:
     pass
 
-if len(save) == 7:
+if len(save) == 8:
     points = int(save[0])
-    max_pristege = int(save[1])
+    max_prestige = int(save[1])
     double_gen_ticks = int(save[2])
     tickspeed_boost_ticks = int(save[3])
     points_discount_boolean = save[4]
-    gen_list = save[5]
-    upgrade_dict = save[6]
+    ascenssion_dict = save[5]
+    gen_list = save[6]
+    upgrade_dict = save[7]
 else:
     points = 0 
-    max_pristege = 5
+    max_prestige = 5
     double_gen_ticks = 0
     tickspeed_boost_ticks = 0
     points_discount_boolean = False
-    gen_list =  [Generator(1)]
-    upgrade_dict = {"buy_amount" : Upgrade("Buy Amount", 25, 3, 100), "tickspeed" : Upgrade("Tickspeed", 100, 100, 25), "unlock_bank" : UpgradeStoreValue("Unlock Bank", 250, 5, 100, 50)}
+    ascenssion_dict = {"ascenssion_goal" : 1000000, "starting prestige" : 5, "upgrade_scale" : 0, "gen_price_upgrade" : 1, "gen_val_upgrade" : 1, "starting_gen_amount" : 1}
+    gen_list =  initilise_gens()
+    upgrade_dict = initilise_upgrades()
 
 #establish anything not saved
 random.seed()
 running = True
 save_countdown = 30
 
-ultra_rare_events = ["increase max pristege", "double gen for rounds", "unlock next tier"]
+ascenssion_upgrades = ["increase max prestige by 5", "increase all upgrades", "reduce gen price", "increase gen amount", "increase starting gen number"]
+
+ultra_rare_events = ["increase max prestige", "double gen for rounds", "unlock next tier"]
 medium_rare_events = ["free upgrade", "free gens", "double savings"]
 normal_rare_events = ["points discount", "tickspeed boost", "double points"]
 
 #this function saves the game as a pickled list and creates a save if one dosen't exist
 def save_game():
-    save = [points, max_pristege, double_gen_ticks, tickspeed_boost_ticks, points_discount_boolean, gen_list, upgrade_dict]
+    save = [points, max_prestige, double_gen_ticks, tickspeed_boost_ticks, points_discount_boolean, ascenssion_dict, gen_list, upgrade_dict]
     try:    
         with open("save.pkl", "xb") as fp:
             pickle.dump(save, fp, protocol=pickle.HIGHEST_PROTOCOL)
@@ -51,7 +65,7 @@ def save_game():
 #this function takes the amount of points and amount of points in the unlock bank upgrade and uses to them to add a new tier of generator to the end gen list returning the cost of that new tier from the points total
 def new_generator(points):
     new_gen_number = len(gen_list) + 1
-    gen_list.append(Generator(new_gen_number))
+    gen_list.append(Generator(new_gen_number, ascenssion_dict))
     points_cost = gen_list[-1].price - upgrade_dict["unlock_bank"].value
     if gen_list[-1].price > upgrade_dict["unlock_bank"].value:
         upgrade_dict["unlock_bank"].value -= (gen_list[-1].price - points_cost)
@@ -59,14 +73,77 @@ def new_generator(points):
     upgrade_dict["unlock_bank"].value -= gen_list[-1].price
     return 0
 
+def ascend():
+    global points, ascenssion_dict, max_prestige, upgrade_dict, gen_list, double_gen_ticks, tickspeed_boost_ticks, points_discount_boolean
+    if points < ascenssion_dict["ascenssion_goal"]:
+        raise Exception("not enough points")
+        return None
+    else:
+        print_line()
+        print (ascended_askii)
+        print_line()
+        time.sleep(2)
+        ascenssion_dict["ascenssion_goal"] *= 1000
+        ascenssion_upgrade = ascenssion_upgrades[random.randint(0, len(ascenssion_upgrades) - 1)]
+        if ascenssion_upgrade == "increase max prestige by 5":
+            ascenssion_dict["starting prestige"] += 5
+            print_line()
+            print (max_prestige_askii)
+            print_line()
+            print (f"New max prestige is {ascenssion_dict["starting prestige"]}")
+            print_line()
+            time.sleep(2)
+        if ascenssion_upgrade == "increase all upgrades":
+            ascenssion_dict["upgrade_scale"] += 5
+            print_line()
+            print (max_prestige_askii)
+            print_line()
+            print (f"All upgrades starting and max levels increased by 5")
+            print_line()
+            time.sleep(2)
+        if ascenssion_upgrade == "reduce gen price":
+            ascenssion_dict["gen_price_upgrade"] += 1
+            print_line()
+            print (reduced_gen_askii)
+            print_line()
+            print (f"All Generator prices reduced")
+            print_line()
+            time.sleep(2)
+        if ascenssion_upgrade == "increase gen amount":
+            ascenssion_dict["gen_val_upgrade"] += 1
+            print_line()
+            print (increase_gen_askii)
+            print_line()
+            print (f"All Generator values increased")
+            print_line()
+            time.sleep(2)
+        if ascenssion_upgrade == "increase starting gen number":
+            ascenssion_dict["starting_gen_amount"] *= 2
+            print_line()
+            print (starting_gen_askii)
+            print_line()
+            print (f"You start with {ascenssion_dict["starting_gen_amount"]} gens")
+            print_line()
+            time.sleep(2)
+        max_prestige = ascenssion_dict["starting prestige"]
+        upgrade_dict = initilise_upgrades()
+        gen_list = initilise_gens()
+        points = 0 
+        double_gen_ticks = 0
+        tickspeed_boost_ticks = 0
+        points_discount_boolean = False
+        save_game()
+        return
+
+
 #when a random event is triggered then roll to decide what level of rarity it will be and pick one of the events from that rarity at random
 def random_event_genirator(event_log):
     event = None
     roll = random.randint(1, 100)
     if roll >= 90:
         event = ultra_rare_events[random.randint(0, len(ultra_rare_events) - 1)]
-        if event == "increase max pristege":
-            event_log.append(f"Random Event! {increase_max_pristege()}")
+        if event == "increase max prestige":
+            event_log.append(f"Random Event! {increase_max_prestige()}")
         if event == "double gen for rounds":
             event_log.append(f"Random Event! {double_gen()}")
         if event == "unlock next tier":
@@ -132,10 +209,10 @@ def double_savings():
     upgrade_dict["unlock_bank"].add_value(upgrade_dict["unlock_bank"].value)
     return "Savings doubled"
 
-def increase_max_pristege():
-    global max_pristege
-    max_pristege += 1
-    return f"Max Pristege increased to {max_pristege}"
+def increase_max_prestige():
+    global max_prestige
+    max_prestige += 1
+    return f"Max prestige increased to {max_prestige}"
 
 def double_gen():
     global double_gen_ticks
@@ -146,6 +223,9 @@ def unlock_next_tier():
     new_generator(float('inf'))
     return "Next Tier unlocked for free"
 
+#commonly used print
+def print_line():
+    print ("============================================================")
 
 def main():
     global points, double_gen_ticks, tickspeed_boost_ticks, points_discount_boolean, save_countdown, test_veriable
@@ -172,14 +252,18 @@ def main():
                     points_generated += gen.generate()
                 double_gen_ticks -= 1
             points -= upgrade_dict["unlock_bank"].add_value(int(points/50))
+            #ascend if possible
+            if points >= ascenssion_dict["ascenssion_goal"]:
+                ascend()
+                continue
             #take readings for how many points have been genirated then reset point starts to track points spent
             points_start = points
-            #pristege a generator if possible
+            #prestige a generator if possible
             for gen in gen_list:
-                if gen.amount > gen.pristege_cost and gen.pristege < max_pristege:
-                    gen_list.append(PristegedGenerator(gen))
+                if gen.amount > gen.prestige_cost and gen.prestige < max_prestige:
+                    gen_list.append(PrestigedGenerator(gen, ascenssion_dict))
                     gen_list.remove(gen)
-                    event_log.append(f"Generator {gen_list[-1].tier} has reached Pristege {gen_list[-1].pristege}")
+                    event_log.append(f"Generator {gen_list[-1].tier} has reached prestige {gen_list[-1].prestige}")
                     gen_list.sort(key=lambda gens:gens.gen_price_ratio)
             #unlock new generator if possible
             if points + upgrade_dict["unlock_bank"].value >= int((BASE_PRICE * (len(gen_list) + 1)) ** ((len(gen_list) + 1) - ((len(gen_list) + 1) / 2))):
@@ -238,7 +322,7 @@ def main():
 
             highest_gen = gen_list[0]
 
-            print ("============================================================")
+            print_line()
 
             #this prints events that might not happen every tick
             for event in event_log:
@@ -261,6 +345,10 @@ def main():
 
             if upgrade_dict["unlock_bank"].value > 0:
                 print (f"You have {format(upgrade_dict["unlock_bank"].value, ",d")} points saved to unlock Tier {(len(gen_list) + 1)}")
+
+            #prints the current assesion goal about every 30 seconds bassed off the save countdown to save adding another
+            if save_countdown == 1:
+                print (f"You need {format(ascenssion_dict["ascenssion_goal"], ",d")} points to Ascend")
 
             #sleep bassed on if there is a boost event happening, then reducies the time bassed on the tickspeed upgrade with a hard limit to stop the game running too fast
             if tickspeed_boost_ticks > 0:
