@@ -37,7 +37,7 @@ else:
     double_gen_ticks = 0
     tickspeed_boost_ticks = 0
     points_discount_boolean = False
-    ascenssion_dict = {"ascenssion_goal" : 1000000, "starting prestige" : 5, "upgrade_scale" : 0, "gen_price_upgrade" : 1, "gen_val_upgrade" : 1, "starting_gen_amount" : 1}
+    ascenssion_dict = {"ascenssion_goal" : 100000, "starting prestige" : 5, "upgrade_scale" : 0, "gen_price_upgrade" : 1, "gen_val_upgrade" : 1, "starting_gen_amount" : 1}
     gen_list =  initilise_gens()
     upgrade_dict = initilise_upgrades()
 
@@ -46,6 +46,10 @@ random.seed()
 running = True
 save_countdown = 30
 
+first_ascenssion_upgrades = ["increase gen amount", "reduce gen price"]
+second_ascenssion_upgrades = ["increase max prestige by 5"]
+third_ascenssion_upgrades = ["increase all upgrades", "increase starting gen number"]
+forth_ascenssion_upgrades = ["increase all upgrades", "reduce gen price", "increase gen amount", "increase starting gen number"]
 ascenssion_upgrades = ["increase max prestige by 5", "increase all upgrades", "reduce gen price", "increase gen amount", "increase starting gen number"]
 
 ultra_rare_events = ["increase max prestige", "double gen for rounds", "unlock next tier"]
@@ -73,6 +77,8 @@ def new_generator(points):
     upgrade_dict["unlock_bank"].value -= gen_list[-1].price
     return 0
 
+#this resets all aspects of the game except for upgrades unlocked by this function, allowing powerful upgrades at the cost of starting over 
+#first it applies these upgrades then dose the reset
 def ascend():
     global points, ascenssion_dict, max_prestige, upgrade_dict, gen_list, double_gen_ticks, tickspeed_boost_ticks, points_discount_boolean
     if points < ascenssion_dict["ascenssion_goal"]:
@@ -83,8 +89,18 @@ def ascend():
         print (ascended_askii)
         print_line()
         time.sleep(2)
-        ascenssion_dict["ascenssion_goal"] *= 1000
-        ascenssion_upgrade = ascenssion_upgrades[random.randint(0, len(ascenssion_upgrades) - 1)]
+        ascenssion_dict["ascenssion_goal"] *= 10
+        ascenssion_dict["ascenssion_count"] += 1
+        if ascenssion_dict["ascenssion_count"] == 1:
+            ascenssion_upgrade = first_ascenssion_upgrades[random.randint(0, len(first_ascenssion_upgrades) - 1)]
+        if ascenssion_dict["ascenssion_count"] == 2:
+            ascenssion_upgrade = second_ascenssion_upgrades[random.randint(0, len(second_ascenssion_upgrades) - 1)]
+        if ascenssion_dict["ascenssion_count"] == 3:
+            ascenssion_upgrade = third_ascenssion_upgrades[random.randint(0, len(third_ascenssion_upgrades) - 1)]
+        if ascenssion_dict["ascenssion_count"] == 4:
+            ascenssion_upgrade = forth_ascenssion_upgrades[random.randint(0, len(forth_ascenssion_upgrades) - 1)]
+        else:
+            ascenssion_upgrade = ascenssion_upgrades[random.randint(0, len(ascenssion_upgrades) - 1)]
         if ascenssion_upgrade == "increase max prestige by 5":
             ascenssion_dict["starting prestige"] += 5
             print_line()
@@ -96,7 +112,7 @@ def ascend():
         if ascenssion_upgrade == "increase all upgrades":
             ascenssion_dict["upgrade_scale"] += 5
             print_line()
-            print (max_prestige_askii)
+            print (upgrade_askii)
             print_line()
             print (f"All upgrades starting and max levels increased by 5")
             print_line()
@@ -266,7 +282,7 @@ def main():
                     event_log.append(f"Generator {gen_list[-1].tier} has reached prestige {gen_list[-1].prestige}")
                     gen_list.sort(key=lambda gens:gens.gen_price_ratio)
             #unlock new generator if possible
-            if points + upgrade_dict["unlock_bank"].value >= int((BASE_PRICE * (len(gen_list) + 1)) ** ((len(gen_list) + 1) - ((len(gen_list) + 1) / 2))):
+            if points + upgrade_dict["unlock_bank"].value >= int((BASE_PRICE * ((len(gen_list) + 1) / ascenssion_dict["gen_price_upgrade"])) ** ((len(gen_list) + 1) - ((len(gen_list) + 1) / 2))):
                 points -= new_generator(points)
                 event_log.append(f"Tier {len(gen_list)} unlocked")
                 gen_list.sort(key=lambda gens:gens.gen_price_ratio)

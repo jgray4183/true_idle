@@ -29,6 +29,8 @@ class Generator():
             self.price = int((BASE_PRICE * (self.tier / ascenssion_dict["gen_price_upgrade"])) ** (self.tier - (self.tier / 2)))
         else:
             self.price = BASE_PRICE ** self.tier
+        if self.price < 1:
+            self.price = 1
     
     def get_ratio(self):
         self.gen_price_ratio = self.price / self.gen_val
@@ -66,7 +68,7 @@ class PrestigedGenerator(Generator):
         self.get_ratio()
 
     def __str__(self):
-        return f"prestige {self.prestige} Tier {self.tier} Generator"
+        return f"Prestige {self.prestige} Tier {self.tier} Generator"
 
 #Upgrades make the game easier and are upgrades in a similar way to generators
 
