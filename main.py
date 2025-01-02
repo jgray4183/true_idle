@@ -94,11 +94,11 @@ def ascend():
         ascenssion_dict["ascenssion_count"] += 1
         if ascenssion_dict["ascenssion_count"] == 1:
             ascenssion_upgrade = first_ascenssion_upgrades[random.randint(0, len(first_ascenssion_upgrades) - 1)]
-        if ascenssion_dict["ascenssion_count"] == 2:
+        elif ascenssion_dict["ascenssion_count"] == 2:
             ascenssion_upgrade = second_ascenssion_upgrades[random.randint(0, len(second_ascenssion_upgrades) - 1)]
-        if ascenssion_dict["ascenssion_count"] == 3:
+        elif ascenssion_dict["ascenssion_count"] == 3:
             ascenssion_upgrade = third_ascenssion_upgrades[random.randint(0, len(third_ascenssion_upgrades) - 1)]
-        if ascenssion_dict["ascenssion_count"] == 4:
+        elif ascenssion_dict["ascenssion_count"] == 4:
             ascenssion_upgrade = forth_ascenssion_upgrades[random.randint(0, len(forth_ascenssion_upgrades) - 1)]
         else:
             ascenssion_upgrade = ascenssion_upgrades[random.randint(0, len(ascenssion_upgrades) - 1)]
