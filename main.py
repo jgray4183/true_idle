@@ -37,7 +37,7 @@ else:
     double_gen_ticks = 0
     tickspeed_boost_ticks = 0
     points_discount_boolean = False
-    ascenssion_dict = {"ascenssion_goal" : 100000, "starting prestige" : 5, "upgrade_scale" : 0, "gen_price_upgrade" : 1, "gen_val_upgrade" : 1, "starting_gen_amount" : 1}
+    ascenssion_dict = {"ascenssion_count" : 0, "ascenssion_goal" : 100000, "starting prestige" : 5, "upgrade_scale" : 0, "gen_price_upgrade" : 1, "gen_val_upgrade" : 1, "starting_gen_amount" : 1}
     gen_list =  initilise_gens()
     upgrade_dict = initilise_upgrades()
 
@@ -70,12 +70,13 @@ def save_game():
 def new_generator(points):
     new_gen_number = len(gen_list) + 1
     gen_list.append(Generator(new_gen_number, ascenssion_dict))
-    points_cost = gen_list[-1].price - upgrade_dict["unlock_bank"].value
     if gen_list[-1].price > upgrade_dict["unlock_bank"].value:
-        upgrade_dict["unlock_bank"].value -= (gen_list[-1].price - points_cost)
+        points_cost = gen_list[-1].price - upgrade_dict["unlock_bank"].value
+        upgrade_dict["unlock_bank"].value -= 0
         return points_cost
-    upgrade_dict["unlock_bank"].value -= gen_list[-1].price
-    return 0
+    else:
+        upgrade_dict["unlock_bank"].value -= gen_list[-1].price
+        return 0
 
 #this resets all aspects of the game except for upgrades unlocked by this function, allowing powerful upgrades at the cost of starting over 
 #first it applies these upgrades then dose the reset
@@ -244,7 +245,7 @@ def print_line():
     print ("============================================================")
 
 def main():
-    global points, double_gen_ticks, tickspeed_boost_ticks, points_discount_boolean, save_countdown, test_veriable
+    global points, double_gen_ticks, tickspeed_boost_ticks, points_discount_boolean, save_countdown
     #this try statement is to allow the game to save if "closed" by keyboard interrupt
     try:
         while running == True:
@@ -364,7 +365,10 @@ def main():
 
             #prints the current assesion goal about every 30 seconds bassed off the save countdown to save adding another
             if save_countdown == 1:
-                print (f"You need {format(ascenssion_dict["ascenssion_goal"], ",d")} points to Ascend")
+                if ascenssion_dict["ascenssion_count"] >= 1:
+                    print (f"You have ascended {ascenssion_dict["ascenssion_count"]} times \nYou need {format(ascenssion_dict["ascenssion_goal"], ",d")} points to Ascend")
+                else:
+                    print (f"You need {format(ascenssion_dict["ascenssion_goal"], ",d")} points to Ascend")
 
             #sleep bassed on if there is a boost event happening, then reducies the time bassed on the tickspeed upgrade with a hard limit to stop the game running too fast
             if tickspeed_boost_ticks > 0:

@@ -11,8 +11,10 @@ To do
 
 Add further pristege systems
 Make numbers convert to scientific notation when they get large
+Add way to keep saves between versions
 
 ======================================================================================================================================================================================================
 Known bugs
 
 Cost discount event dosen't apply to new tiers
+Random events are uncommon later in 
