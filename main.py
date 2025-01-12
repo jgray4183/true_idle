@@ -22,16 +22,17 @@ try:
 except Exception as e:
     pass
 
-if len(save) == 8:
-    points = int(save[0])
-    max_prestige = int(save[1])
-    double_gen_ticks = int(save[2])
-    tickspeed_boost_ticks = int(save[3])
-    points_discount_boolean = save[4]
-    ascenssion_dict = save[5]
-    gen_list = save[6]
-    upgrade_dict = save[7]
-else:
+if len(save) == 9 and save[0] == 0.21001:
+    points = int(save[1])
+    max_prestige = int(save[2])
+    double_gen_ticks = int(save[3])
+    tickspeed_boost_ticks = int(save[4])
+    points_discount_boolean = save[5]
+    ascenssion_dict = save[6]
+    gen_list = save[7]
+    upgrade_dict = save[8]
+elif len(save) == 0:
+    save_version = 0.21001
     points = 0 
     max_prestige = 5
     double_gen_ticks = 0
@@ -40,6 +41,8 @@ else:
     ascenssion_dict = {"ascenssion_count" : 0, "ascenssion_goal" : 100000, "starting prestige" : 5, "upgrade_scale" : 0, "gen_price_upgrade" : 1, "gen_val_upgrade" : 1, "starting_gen_amount" : 1}
     gen_list =  initilise_gens()
     upgrade_dict = initilise_upgrades()
+else:
+    raise Exception("save index wrong")
 
 #establish anything not saved
 random.seed()
@@ -58,7 +61,7 @@ normal_rare_events = ["points discount", "tickspeed boost", "double points"]
 
 #this function saves the game as a pickled list and creates a save if one dosen't exist
 def save_game():
-    save = [points, max_prestige, double_gen_ticks, tickspeed_boost_ticks, points_discount_boolean, ascenssion_dict, gen_list, upgrade_dict]
+    save = [save_version, points, max_prestige, double_gen_ticks, tickspeed_boost_ticks, points_discount_boolean, ascenssion_dict, gen_list, upgrade_dict]
     try:    
         with open("save.pkl", "xb") as fp:
             pickle.dump(save, fp, protocol=pickle.HIGHEST_PROTOCOL)
