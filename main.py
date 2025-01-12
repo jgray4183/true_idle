@@ -4,6 +4,7 @@ from askii import *
 import time
 import random
 import pickle
+import math
 
 def initilise_gens():
     gen_list = []
@@ -12,7 +13,7 @@ def initilise_gens():
     return gen_list
 
 def initilise_upgrades():
-    return {"buy_amount" : Upgrade("Buy Amount", ascenssion_dict, 25, 3, 100 + ascenssion_dict["upgrade_scale"]), "tickspeed" : Upgrade("Tickspeed", ascenssion_dict, 100, 100, 25 + ascenssion_dict["upgrade_scale"]), "unlock_bank" : UpgradeStoreValue("Unlock Bank", ascenssion_dict, 250, 5, 100 + ascenssion_dict["upgrade_scale"], 50)}
+    return {"buy_amount" : Upgrade("Buy Amount", ascenssion_dict, 25, 9, 100 + ascenssion_dict["upgrade_scale"]), "tickspeed" : Upgrade("Tickspeed", ascenssion_dict, 100, 100, 25 + ascenssion_dict["upgrade_scale"]), "unlock_bank" : UpgradeStoreValue("Unlock Bank", ascenssion_dict, 250, 5, 100 + ascenssion_dict["upgrade_scale"], 50)}
 
 #if a save exists import it otherwise start the game new
 save = []
@@ -94,11 +95,11 @@ def ascend():
         ascenssion_dict["ascenssion_count"] += 1
         if ascenssion_dict["ascenssion_count"] == 1:
             ascenssion_upgrade = first_ascenssion_upgrades[random.randint(0, len(first_ascenssion_upgrades) - 1)]
-        if ascenssion_dict["ascenssion_count"] == 2:
+        elif ascenssion_dict["ascenssion_count"] == 2:
             ascenssion_upgrade = second_ascenssion_upgrades[random.randint(0, len(second_ascenssion_upgrades) - 1)]
-        if ascenssion_dict["ascenssion_count"] == 3:
+        elif ascenssion_dict["ascenssion_count"] == 3:
             ascenssion_upgrade = third_ascenssion_upgrades[random.randint(0, len(third_ascenssion_upgrades) - 1)]
-        if ascenssion_dict["ascenssion_count"] == 4:
+        elif ascenssion_dict["ascenssion_count"] == 4:
             ascenssion_upgrade = forth_ascenssion_upgrades[random.randint(0, len(forth_ascenssion_upgrades) - 1)]
         else:
             ascenssion_upgrade = ascenssion_upgrades[random.randint(0, len(ascenssion_upgrades) - 1)]
@@ -148,7 +149,6 @@ def ascend():
         points = 0 
         double_gen_ticks = 0
         tickspeed_boost_ticks = 0
-        points_discount_boolean = False
         save_game()
         return
 
@@ -362,7 +362,7 @@ def main():
                     event_log.append(f"Generator {gen_list[-1].tier} has reached prestige {gen_list[-1].prestige}")
                     gen_list.sort(key=lambda gens:gens.gen_price_ratio)
             #unlock new generator if possible
-            if points + upgrade_dict["unlock_bank"].value >= int((BASE_PRICE * ((len(gen_list) + 1) / ascenssion_dict["gen_price_upgrade"])) ** ((len(gen_list) + 1) - ((len(gen_list) + 1) / 2))):
+            if points + upgrade_dict["unlock_bank"].value >= int((250 * (math.sqrt((len(gen_list) + 1) ** 1.9))) - 330):
                 points -= new_generator(points)
                 event_log.append(f"Tier {len(gen_list)} unlocked")
                 gen_list.sort(key=lambda gens:gens.gen_price_ratio)

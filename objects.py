@@ -1,4 +1,5 @@
 from constants import BASE_GEN, BASE_PRICE, DISCOUNT
+import math
 
 #Generators are the main way of genirating points, they start with values bassed on constants and there tier
 
@@ -20,13 +21,13 @@ class Generator():
 
     def get_gen(self, ascenssion_dict):
         if self.tier > 1:
-            self.gen_val = int((BASE_GEN + (self.tier * ascenssion_dict["gen_val_upgrade"]) - 1) * ((self.tier - (self.tier / 2)) ** 3))
+            self.gen_val = int(1 + ((self.tier ** 1.3) / 2.4))
         else:
             self.gen_val = BASE_GEN ** self.tier
 
     def get_price(self, ascenssion_dict):
         if self.tier > 1:
-            self.price = int((BASE_PRICE * (self.tier / ascenssion_dict["gen_price_upgrade"])) ** (self.tier - (self.tier / 2)))
+            self.price = int((250 * (math.sqrt(self.tier ** 1.9))) - 330)
         else:
             self.price = BASE_PRICE ** self.tier
         if self.price < 1:
@@ -61,8 +62,8 @@ class Generator():
 class PrestigedGenerator(Generator):
     def __init__(self, gen, ascenssion_dict):
         super().__init__(gen.tier, ascenssion_dict)
-        self.gen_val = int((gen.gen_val + gen.tier) * 1.5)
-        self.price = int((gen.price + gen.tier) * 1.10)
+        self.gen_val = int(gen.gen_val + gen.tier)
+        self.price = int(gen.price * 1.1)
         self.prestige = gen.prestige + 1
         self.prestige_cost = int(gen.prestige_cost * 1.5)
         self.get_ratio()
