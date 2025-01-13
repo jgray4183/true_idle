@@ -23,22 +23,14 @@ try:
 except Exception as e:
     pass
 
-if len(save) == 9 and save[0] == 0.21001:
-    points = int(save[1])
-    max_prestige = int(save[2])
-    double_gen_ticks = int(save[3])
-    tickspeed_boost_ticks = int(save[4])
-    points_discount_boolean = save[5]
-    ascenssion_dict = save[6]
-    gen_list = save[7]
-    upgrade_dict = save[8]
+if len(save) == 5 and save[0] == 0.22001:
+    veriables_dict = save[1]
+    ascenssion_dict = save[2]
+    gen_list = save[3]
+    upgrade_dict = save[4]
 elif len(save) == 0:
-    save_version = 0.21001
-    points = 0 
-    max_prestige = 5
-    double_gen_ticks = 0
-    tickspeed_boost_ticks = 0
-    points_discount_boolean = False
+    save_version = 0.22001
+    veriables_dict = {"points": 0, "max_prestige": 5, "double_gen_ticks": 0, "tickspeed_boost_ticks": 0, "points_discount_boolean": False, "random_event_chance": 90}
     ascenssion_dict = {"ascenssion_count" : 0, "ascenssion_goal" : 100000, "starting prestige" : 5, "upgrade_scale" : 0, "gen_price_upgrade" : 1, "gen_val_upgrade" : 1, "starting_gen_amount" : 1}
     gen_list =  initilise_gens()
     upgrade_dict = initilise_upgrades()
@@ -62,7 +54,7 @@ normal_rare_events = ["points discount", "tickspeed boost", "double points"]
 
 #this function saves the game as a pickled list and creates a save if one dosen't exist
 def save_game():
-    save = [save_version, points, max_prestige, double_gen_ticks, tickspeed_boost_ticks, points_discount_boolean, ascenssion_dict, gen_list, upgrade_dict]
+    save = [save_version, veriables_dict, ascenssion_dict, gen_list, upgrade_dict]
     try:    
         with open("save.pkl", "xb") as fp:
             pickle.dump(save, fp, protocol=pickle.HIGHEST_PROTOCOL)
@@ -71,12 +63,14 @@ def save_game():
             pickle.dump(save, fp, protocol=pickle.HIGHEST_PROTOCOL)
 
 #this function takes the amount of points and amount of points in the unlock bank upgrade and uses to them to add a new tier of generator to the end gen list returning the cost of that new tier from the points total
-def new_generator(points):
+def new_generator(is_free):
     new_gen_number = len(gen_list) + 1
     gen_list.append(Generator(new_gen_number, ascenssion_dict))
-    if gen_list[-1].price > upgrade_dict["unlock_bank"].value:
+    if is_free == True:
+        return 0
+    elif gen_list[-1].price > upgrade_dict["unlock_bank"].value:
         points_cost = gen_list[-1].price - upgrade_dict["unlock_bank"].value
-        upgrade_dict["unlock_bank"].value -= 0
+        upgrade_dict["unlock_bank"].value = 0
         return points_cost
     else:
         upgrade_dict["unlock_bank"].value -= gen_list[-1].price
@@ -85,8 +79,8 @@ def new_generator(points):
 #this resets all aspects of the game except for upgrades unlocked by this function, allowing powerful upgrades at the cost of starting over 
 #first it applies these upgrades then dose the reset
 def ascend():
-    global points, ascenssion_dict, max_prestige, upgrade_dict, gen_list, double_gen_ticks, tickspeed_boost_ticks, points_discount_boolean
-    if points < ascenssion_dict["ascenssion_goal"]:
+    global veriables_dict, ascenssion_dict, upgrade_dict, gen_list
+    if veriables_dict["points"] < ascenssion_dict["ascenssion_goal"]:
         raise Exception("not enough points")
         return None
     else:
@@ -146,18 +140,21 @@ def ascend():
             print (f"You start with {ascenssion_dict["starting_gen_amount"]} gens")
             print_break()
             time.sleep(2)
-        max_prestige = ascenssion_dict["starting prestige"]
+        veriables_dict["max_prestige"] = ascenssion_dict["starting prestige"]
         upgrade_dict = initilise_upgrades()
         gen_list = initilise_gens()
-        points = 0 
-        double_gen_ticks = 0
-        tickspeed_boost_ticks = 0
+        veriables_dict["points"] = 0 
+        veriables_dict["double_gen_ticks"] = 0
+        veriables_dict["tickspeed_boost_ticks"] = 0
         save_game()
         return
 
 
 #when a random event is triggered then roll to decide what level of rarity it will be and pick one of the events from that rarity at random
 def random_event_genirator(event_log):
+    if veriables_dict["random_event_chance"] < 100:
+        veriables_dict["random_event_chance"] += 1
+    print (veriables_dict["random_event_chance"])
     event = None
     roll = random.randint(1, 100)
     if roll >= 90:
@@ -188,20 +185,20 @@ def random_event_genirator(event_log):
 
 #random event functions
 def double_points():
-    global double_gen_ticks
-    if double_gen_ticks == 0:
-        double_gen_ticks = 1
+    global veriables_dict
+    if veriables_dict["double_gen_ticks"] == 0:
+        veriables_dict["double_gen_ticks"] = 1
         return "Point gen doubled this tick"
     return None
 
 def tickspeed_boost():
-    global tickspeed_boost_ticks
-    tickspeed_boost_ticks = 30
+    global veriables_dict
+    veriables_dict["tickspeed_boost_ticks"] = 30
     return "Tickspeed increased for 30 ticks"
 
 def points_discount():
-    global points_discount_boolean
-    points_discount_boolean = True
+    global veriables_dict
+    veriables_dict["points_discount_boolean"] = True
     return "Costs discounted this tick"
 
 def free_upgrade():
@@ -230,17 +227,17 @@ def double_savings():
     return "Savings doubled"
 
 def increase_max_prestige():
-    global max_prestige
-    max_prestige += 1
-    return f"Max prestige increased to {max_prestige}"
+    global veriables_dict
+    veriables_dict["max_prestige"] += 1
+    return f"Max prestige increased to {veriables_dict["max_prestige"]}"
 
 def double_gen():
-    global double_gen_ticks
-    double_gen_ticks += random.randint(1,10)
-    return f"Geniration doubled for {double_gen_ticks} ticks"
+    global veriables_dict
+    veriables_dict["double_gen_ticks"] += random.randint(1,10)
+    return f"Geniration doubled for {veriables_dict["double_gen_ticks"]} ticks"
 
 def unlock_next_tier():
-    new_generator(float('inf'))
+    new_generator(True)
     return "Next Tier unlocked for free"
 
 #commonly used print
@@ -250,45 +247,45 @@ def print_break():
 #this function will go through all the upgrades and try to buy a new tier if possible, reporting it in the event log if it takes place
 #trying to buy with a discount first then at full price if discount isn't active
 def buy_upgrades(points_discount_boolean, upgrade_dict, event_log):
-    global points
+    global veriables_dict
     if points_discount_boolean == True:
         for upgrade in upgrade_dict:
-            if points >= (upgrade_dict[upgrade].price * DISCOUNT) and upgrade_dict[upgrade].tier < upgrade_dict[upgrade].max:
-                points = upgrade_dict[upgrade].buy_discount(points)
+            if veriables_dict["points"] >= (upgrade_dict[upgrade].price * DISCOUNT) and upgrade_dict[upgrade].tier < upgrade_dict[upgrade].max:
+                veriables_dict["points"] = upgrade_dict[upgrade].buy_discount(veriables_dict["points"])
                 event_log.append(f"{upgrade_dict[upgrade].name} Upgraded to rank {upgrade_dict[upgrade].tier}")
     else:
         for upgrade in upgrade_dict:
-            if points >= upgrade_dict[upgrade].price and upgrade_dict[upgrade].tier < upgrade_dict[upgrade].max:
-                points = upgrade_dict[upgrade].buy(points)
+            if veriables_dict["points"] >= upgrade_dict[upgrade].price and upgrade_dict[upgrade].tier < upgrade_dict[upgrade].max:
+                veriables_dict["points"] = upgrade_dict[upgrade].buy(veriables_dict["points"])
                 event_log.append(f"{upgrade_dict[upgrade].name} Upgraded to rank {upgrade_dict[upgrade].tier}")
 
 #buy max of each generator that can be afforded starting with the generator that makes the most points for it cost
 #trying to buy with a discount first then at full price if discount isn't active
 def buy_gens(points_discount_boolean, gen_list, upgrade_dict):
-    global points
+    global veriables_dict
     if points_discount_boolean == True:
         for gen in (gen_list):
-            if points >= gen.price * DISCOUNT:
-                buy_amount = int(points // gen.price)
+            if veriables_dict["points"] >= gen.price * DISCOUNT:
+                buy_amount = int(veriables_dict["points"] // gen.price)
                 if upgrade_dict["buy_amount"].tier < buy_amount:
                     buy_amount = upgrade_dict["buy_amount"].tier
                 buy_cost = buy_amount * int(gen.price * DISCOUNT)
                 for i in range(buy_amount):
-                    gen.buy_discount(points)
-                points -= buy_cost
+                    gen.buy_discount(veriables_dict["points"])
+                veriables_dict["points"] -= buy_cost
     else:
         for gen in (gen_list):
-            if points >= gen.price:
-                buy_amount = int(points // gen.price)
+            if veriables_dict["points"] >= gen.price:
+                buy_amount = int(veriables_dict["points"] // gen.price)
                 if upgrade_dict["buy_amount"].tier < buy_amount:
                     buy_amount = upgrade_dict["buy_amount"].tier
                 buy_cost = buy_amount * gen.price
                 for i in range(buy_amount):
-                    gen.buy(points)
-                points -= buy_cost
+                    gen.buy(veriables_dict["points"])
+                veriables_dict["points"] -= buy_cost
 
 #this function prints out the report of what has happened each tick
-def print_report(gen_list, event_log, points_spent, points_generated, points, upgrade_dict, ascenssion_dict):
+def print_report(gen_list, event_log, points_spent, points_generated, veriables_dict, upgrade_dict, ascenssion_dict):
     total_gens = 0
     for gen in gen_list:
         total_gens += gen.amount
@@ -307,14 +304,14 @@ def print_report(gen_list, event_log, points_spent, points_generated, points, up
     #this prints the points genirated, points spent if any were, running genirator count, and points total so this statement will print every tick, conditions to keep grama correct and provent empty statements
     if highest_gen.amount == 1:
         if points_spent > 0:
-            print(f"{format(points_generated, ",d")} points generated \n{format(points_spent, ",d")} points spent \nYou have {format(total_gens, ",d")} generators, {highest_gen.amount} is a {highest_gen} \nNew Points {format(points, ",d")}")
+            print(f"{format(points_generated, ",d")} points generated \n{format(points_spent, ",d")} points spent \nYou have {format(total_gens, ",d")} generators, {highest_gen.amount} is a {highest_gen} \nNew Points {format(veriables_dict["points"], ",d")}")
         else:
-            print(f"{format(points_generated, ",d")} points generated \nYou have {format(total_gens, ",d")} generators, {highest_gen.amount} is a {highest_gen} \nNew Points {format(points, ",d")}") 
+            print(f"{format(points_generated, ",d")} points generated \nYou have {format(total_gens, ",d")} generators, {highest_gen.amount} is a {highest_gen} \nNew Points {format(veriables_dict["points"], ",d")}") 
     else:
         if points_spent > 0:
-            print(f"{format(points_generated, ",d")} points generated \n{format(points_spent, ",d")} points spent \nYou have {format(total_gens, ",d")} generators, {format(highest_gen.amount, ",d")} are {highest_gen}s \nNew Points {format(points, ",d")}")
+            print(f"{format(points_generated, ",d")} points generated \n{format(points_spent, ",d")} points spent \nYou have {format(total_gens, ",d")} generators, {format(highest_gen.amount, ",d")} are {highest_gen}s \nNew Points {format(veriables_dict["points"], ",d")}")
         else:
-            print(f"{format(points_generated, ",d")} points generated \nYou have {format(total_gens, ",d")} generators, {format(highest_gen.amount, ",d")} are {highest_gen}s \nNew Points {format(points, ",d")}")
+            print(f"{format(points_generated, ",d")} points generated \nYou have {format(total_gens, ",d")} generators, {format(highest_gen.amount, ",d")} are {highest_gen}s \nNew Points {format(veriables_dict["points"], ",d")}")
 
     if upgrade_dict["unlock_bank"].value > 0:
         print (f"You have {format(upgrade_dict["unlock_bank"].value, ",d")} points saved to unlock Tier {(len(gen_list) + 1)}")
@@ -327,54 +324,54 @@ def print_report(gen_list, event_log, points_spent, points_generated, points, up
             print (f"You need {format(ascenssion_dict["ascenssion_goal"], ",d")} points to Ascend")
 
 def main():
-    global points, double_gen_ticks, tickspeed_boost_ticks, points_discount_boolean, save_countdown
+    global veriables_dict, save_countdown
     #this try statement is to allow the game to save if "closed" by keyboard interrupt
     try:
         while running == True:
             #this keeps track of any notable events from the tick and reports them at the end
             event_log = []
             #reset any veriables that should only act for one tick
-            points_discount = False
+            veriables_dict["points_discount_boolean"] = False
             #random events to stop the game being determanistic
-            if random.randint(1 + 40 - (len(gen_list) * 4), 100) == 100:
+            if random.randint(1, 100) >= veriables_dict["random_event_chance"]:
                 event_log = random_event_genirator(event_log)
             #take readings so I can report output changes
             points_generated = 0
             gen_number_start = len(gen_list)
             #generate points for each generator and add 2% of the new points to the upgrade bank, runs a second time if the points genirated are being doubled
             for gen in gen_list:
-                points += gen.generate()
+                veriables_dict["points"] += gen.generate()
                 points_generated += gen.generate()
-            if double_gen_ticks > 0:
+            if veriables_dict["double_gen_ticks"] > 0:
                 for gen in gen_list:
-                    points += gen.generate()
+                    veriables_dict["points"] += gen.generate()
                     points_generated += gen.generate()
-                double_gen_ticks -= 1
-            points -= upgrade_dict["unlock_bank"].add_value(int(points/50))
+                veriables_dict["double_gen_ticks"] -= 1
+            veriables_dict["points"] -= upgrade_dict["unlock_bank"].add_value(int(veriables_dict["points"]/50))
             #ascend if possible
-            if points >= ascenssion_dict["ascenssion_goal"]:
+            if veriables_dict["points"] >= ascenssion_dict["ascenssion_goal"]:
                 ascend()
                 continue
             #take readings for how many points have been genirated then reset point starts to track points spent
-            points_start = points
+            points_start = veriables_dict["points"]
             #prestige a generator if possible
             for gen in gen_list:
-                if gen.amount > gen.prestige_cost and gen.prestige < max_prestige:
+                if gen.amount > gen.prestige_cost and gen.prestige < veriables_dict["max_prestige"]:
                     gen_list.append(PrestigedGenerator(gen, ascenssion_dict))
                     gen_list.remove(gen)
                     event_log.append(f"Generator {gen_list[-1].tier} has reached prestige {gen_list[-1].prestige}")
                     gen_list.sort(key=lambda gens:gens.gen_price_ratio)
             #unlock new generator if possible
-            if points + upgrade_dict["unlock_bank"].value >= int((250 * (math.sqrt((len(gen_list) + 1) ** 1.9))) - 330):
-                points -= new_generator(points)
+            if veriables_dict["points"] + upgrade_dict["unlock_bank"].value >= int((250 * (math.sqrt((len(gen_list) + 1) ** 1.9))) - 330):
+                veriables_dict["points"] -= new_generator(False)
                 event_log.append(f"Tier {len(gen_list)} unlocked")
                 gen_list.sort(key=lambda gens:gens.gen_price_ratio)
             #buy upgrades as they are fewer and more impactful than gens
-            buy_upgrades(points_discount_boolean, upgrade_dict, event_log)
+            buy_upgrades(veriables_dict["points_discount_boolean"], upgrade_dict, event_log)
             #calls the function to buy more of already unlocked genirators
-            buy_gens(points_discount_boolean, gen_list, upgrade_dict)
+            buy_gens(veriables_dict["points_discount_boolean"], gen_list, upgrade_dict)
 
-            points_spent = points_start - points
+            points_spent = points_start - veriables_dict["points"]
 
             #every tick reduce the time till the next auto save then if enough ticks have passed complete a save
             save_countdown -= 1
@@ -386,16 +383,16 @@ def main():
                     save_countdown = 60
 
             #report what has happened this tick to the player
-            print_report(gen_list, event_log, points_spent, points_generated, points, upgrade_dict, ascenssion_dict)
+            print_report(gen_list, event_log, points_spent, points_generated, veriables_dict, upgrade_dict, ascenssion_dict)
 
             #sleep bassed on if there is a boost event happening, then reducies the time bassed on the tickspeed upgrade with a hard limit to stop the game running too fast
-            if tickspeed_boost_ticks > 0:
+            if veriables_dict["tickspeed_boost_ticks"] > 0:
                 if (0.01 * upgrade_dict["tickspeed"].tier) < 0.5:
                     time.sleep(1 - (0.01 * upgrade_dict["tickspeed"].tier)- 0.1)
-                    tickspeed_boost_ticks -= 1
+                    veriables_dict["tickspeed_boost_ticks"] -= 1
                 else:
                     time.sleep (0.5 - 0.1)
-                    tickspeed_boost_ticks -= 1
+                    veriables_dict["tickspeed_boost_ticks"] -= 1
             else:
                 if (0.01 * upgrade_dict["tickspeed"].tier) < 0.5:
                     time.sleep(1 - (0.01 * upgrade_dict["tickspeed"].tier))

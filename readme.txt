@@ -18,3 +18,10 @@ Known bugs
 
 Cost discount event dosen't apply to new tiers
 Random events are uncommon later in 
+
+======================================================================================================================================================================================================
+Version Numbers explained
+
+The inital number is a major release
+The first two numbers after the decimle are public releases of smallers changes IE bug fixes or balance tweeks
+The last three numbers are internal releases (with one esnetually being a placeholder charicter)
