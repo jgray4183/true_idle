@@ -11,13 +11,14 @@ To do
 
 Add further pristege systems
 Make numbers convert to scientific notation when they get large
-Add way to keep saves between versions
 
 ======================================================================================================================================================================================================
 Known bugs
 
 Cost discount event dosen't apply to new tiers
-Random events are uncommon later in 
+Random events are uncommon later in
+Converting a save can inflate upgrade bank value well beyond what it should be
+Converting saves might distort values
 
 ======================================================================================================================================================================================================
 Version Numbers explained

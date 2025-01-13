@@ -79,7 +79,7 @@ class Upgrade():
         self.price = price
         self.multiplier = multiplier
         self.max_tier = max_tier
-        self.tier = 1 + ascenssion_dict["upgrade_scale"]
+        self.tier = 1
 
     def buy(self, points):
         if self.price > points:

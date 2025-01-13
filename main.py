@@ -1,5 +1,5 @@
 from objects import Generator, PrestigedGenerator, Upgrade, UpgradeStoreValue
-from constants import BASE_PRICE, DISCOUNT
+from constants import BASE_PRICE, DISCOUNT, GAME_VERSION
 from askii import *
 import time
 import random
@@ -7,18 +7,109 @@ import pickle
 import math
 
 #the list of genirators is a core part of the game and needs to be reset by mutiples functions in the game, it is also called when making a save
-def initilise_gens():
+def initilise_gens(ascenssion_dict):
     gen_list = []
     for i in range(1, ascenssion_dict["starting_gen_amount"] + 1):
         gen_list.append(Generator(i, ascenssion_dict))
     return gen_list
 
 #the dict of upgrades is a core part of the game and needs to be reset by mutiples functions in the game, it is also called when making a save
-def initilise_upgrades():
+def initilise_upgrades(ascenssion_dict):
+    ascenssion_dict = ascenssion_dict
     upgrade_dict = {"buy_amount" : Upgrade("Buy Amount", ascenssion_dict, 25, 9, 100 + ascenssion_dict["upgrade_scale"]), "tickspeed" : Upgrade("Tickspeed", ascenssion_dict, 100, 100, 25 + ascenssion_dict["upgrade_scale"]), "unlock_bank" : UpgradeStoreValue("Unlock Bank", ascenssion_dict, 250, 7.5, 100 + ascenssion_dict["upgrade_scale"], 50, 5)}
     for upgrade in upgrade_dict:
         upgrade_dict[upgrade].tier += ascenssion_dict["upgrade_scale"]
     return upgrade_dict
+
+#this function will try and convert an old save to work on new versions of the game
+def convert_save(save):
+    save_version = save[0]
+    veriables_dict = save[1]
+    ascenssion_dict = save[2]
+    gen_list = save[3]
+    upgrade_dict = save[4]
+    
+    #points used to be where save version now is in the save, this converts the old points into a current save version
+    points = None
+    if save_version > 1:
+        points = save[0]
+        save_version = GAME_VERSION
+    if save_version < GAME_VERSION:
+        old_save_version = save_version
+        save_version = GAME_VERSION
+    
+    #this tests if the old save is before save numbers and converts it to the new save format
+    if points == int:
+        veriables_dict = {"points": save[0], "max_prestige": save[1], "double_gen_ticks": save[2], "tickspeed_boost_ticks": save[3], "points_discount_boolean": save[4], "random_event_chance": 90}
+        ascenssion_dict = save[5]
+        gen_list = save[6]
+        upgrade_dict = save[7]
+    
+    #this regenirates anything that has been changed since old saves
+    for gen in list(gen_list):
+        new_gen = Generator(gen.tier, ascenssion_dict)
+        for prestige in range(gen.prestige):
+            new_gen = PrestigedGenerator(new_gen, ascenssion_dict)
+        new_gen.amount = gen.amount
+        gen_list.append(new_gen)
+        gen_list.remove(gen)
+    upgrade_dict_new = initilise_upgrades(ascenssion_dict)
+    for upgrade in upgrade_dict_new:
+        upgrade_dict_new[upgrade].tier = upgrade_dict[upgrade].tier
+        for i in range (upgrade_dict_new[upgrade].tier):
+            upgrade_dict_new[upgrade].price *= upgrade_dict_new[upgrade].multiplier
+    #upgrades that hold value have extra veriables that need to be recaluculated
+    for i in range(upgrade_dict_new["unlock_bank"].tier):
+        upgrade_dict_new["unlock_bank"].max_value *= upgrade_dict_new["unlock_bank"].multipler_value
+    if upgrade_dict["unlock_bank"].value >= upgrade_dict_new["unlock_bank"].max_value:
+        upgrade_dict["unlock_bank"].value = upgrade_dict_new["unlock_bank"].value
+    else:
+        upgrade_dict_new["unlock_bank"].value = upgrade_dict_new["unlock_bank"].max_value
+    #changes the original upgrade dict to the new one
+    upgrade_dict = upgrade_dict_new
+    
+    #repaack and return the save
+    save = [save_version, veriables_dict, ascenssion_dict, gen_list, upgrade_dict]
+    return save
+    
+#this function tests that the save is one that will be compatable with the game
+def interrupt_save(save):
+    #first test if the save has the right amount of items in it and that its compatable with the current version of the game
+    if len(save) == 5 and save[0] == GAME_VERSION:
+        return save
+    #if no save exists then create one
+    elif len(save) == 0:
+        save_version = GAME_VERSION
+        veriables_dict = {"points": 0, "max_prestige": 5, "double_gen_ticks": 0, "tickspeed_boost_ticks": 0, "points_discount_boolean": False, "random_event_chance": 90}
+        ascenssion_dict = {"ascenssion_count" : 0, "ascenssion_goal" : 100000, "starting prestige" : 5, "upgrade_scale" : 0, "gen_price_upgrade" : 1, "gen_val_upgrade" : 1, "starting_gen_amount" : 1}
+        gen_list =  initilise_gens(ascenssion_dict)
+        upgrade_dict = initilise_upgrades(ascenssion_dict)
+        save = [save_version, veriables_dict, ascenssion_dict, gen_list, upgrade_dict]
+        return save
+    #this first gives the player a chance to try and convert an old save to a new save, if they don't they will need to delete there save and run the game again
+    else:
+        print ("Old save detected, do you want to try and convert to current build? (Not the best experiance, quite buggy)\n Y/N")
+        save_convert_answer = input()
+        print (save_convert_answer)
+        if save_convert_answer.startswith("y") or save_convert_answer.startswith("Y"):
+            save = convert_save(save)
+            #test the save that was genirated again using recusion to make sure this was sussecul
+            return interrupt_save(save)
+        elif save_convert_answer.startswith("n") or save_convert_answer.startswith("N"):
+            print ("Do you want to reset your save to play the new version?\n Y/N")
+            reset_answer = input()
+            if reset_answer.startswith("y") or reset_answer.startswith("Y"):
+                save = []
+                return interrupt_save(save)
+            elif reset_answer.startswith("n") or reset_answer.startswith("N"):
+                raise Exception("Incompatable save")
+            else:
+                raise Exception("Invalid answer")
+                return interrupt_save(save)
+        else:
+            raise Exception("Invalid answer")
+            return interrupt_save(save)
+
 
 #if a save exists import it otherwise allow a new save to be genirated
 save = []
@@ -28,23 +119,15 @@ try:
 except Exception as e:
     pass
 
-#first test if the save has the right amount of items in it and that its compatable with the current version of the game
-if len(save) == 5 and save[0] == 0.22001:
-    save_version = save[0]
-    veriables_dict = save[1]
-    ascenssion_dict = save[2]
-    gen_list = save[3]
-    upgrade_dict = save[4]
-#if no save exists then create one
-elif len(save) == 0:
-    save_version = 0.22001
-    veriables_dict = {"points": 0, "max_prestige": 5, "double_gen_ticks": 0, "tickspeed_boost_ticks": 0, "points_discount_boolean": False, "random_event_chance": 90}
-    ascenssion_dict = {"ascenssion_count" : 0, "ascenssion_goal" : 100000, "starting prestige" : 5, "upgrade_scale" : 0, "gen_price_upgrade" : 1, "gen_val_upgrade" : 1, "starting_gen_amount" : 1}
-    gen_list =  initilise_gens()
-    upgrade_dict = initilise_upgrades()
-#this will raise and exception if a save exists but it isn't compatable with this version of the game
-else:
-    raise Exception("save index wrong")
+#call the function to make sure a full compatable save will be loaded
+save = interrupt_save(save)
+
+#set the veriables stored in the save at global scope
+save_version = save[0]
+veriables_dict = save[1]
+ascenssion_dict = save[2]
+gen_list = save[3]
+upgrade_dict = save[4]
 
 #establish anything not saved
 random.seed()
@@ -154,8 +237,8 @@ def ascend():
             print_break()
             time.sleep(2)
         veriables_dict["max_prestige"] = ascenssion_dict["starting prestige"]
-        upgrade_dict = initilise_upgrades()
-        gen_list = initilise_gens()
+        upgrade_dict = initilise_upgrades(ascenssion_dict)
+        gen_list = initilise_gens(ascenssion_dict)
         veriables_dict["points"] = 0 
         veriables_dict["double_gen_ticks"] = 0
         veriables_dict["tickspeed_boost_ticks"] = 0
