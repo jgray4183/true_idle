@@ -154,7 +154,6 @@ def ascend():
 def random_event_genirator(event_log):
     if veriables_dict["random_event_chance"] < 100:
         veriables_dict["random_event_chance"] += 1
-    print (veriables_dict["random_event_chance"])
     event = None
     roll = random.randint(1, 100)
     if roll >= 90:
