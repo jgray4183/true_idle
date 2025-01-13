@@ -6,16 +6,21 @@ import random
 import pickle
 import math
 
+#the list of genirators is a core part of the game and needs to be reset by mutiples functions in the game, it is also called when making a save
 def initilise_gens():
     gen_list = []
     for i in range(1, ascenssion_dict["starting_gen_amount"] + 1):
         gen_list.append(Generator(i, ascenssion_dict))
     return gen_list
 
+#the dict of upgrades is a core part of the game and needs to be reset by mutiples functions in the game, it is also called when making a save
 def initilise_upgrades():
-    return {"buy_amount" : Upgrade("Buy Amount", ascenssion_dict, 25, 9, 100 + ascenssion_dict["upgrade_scale"]), "tickspeed" : Upgrade("Tickspeed", ascenssion_dict, 100, 100, 25 + ascenssion_dict["upgrade_scale"]), "unlock_bank" : UpgradeStoreValue("Unlock Bank", ascenssion_dict, 250, 5, 100 + ascenssion_dict["upgrade_scale"], 50)}
+    upgrade_dict = {"buy_amount" : Upgrade("Buy Amount", ascenssion_dict, 25, 9, 100 + ascenssion_dict["upgrade_scale"]), "tickspeed" : Upgrade("Tickspeed", ascenssion_dict, 100, 100, 25 + ascenssion_dict["upgrade_scale"]), "unlock_bank" : UpgradeStoreValue("Unlock Bank", ascenssion_dict, 250, 7.5, 100 + ascenssion_dict["upgrade_scale"], 50, 5)}
+    for upgrade in upgrade_dict:
+        upgrade_dict[upgrade].tier += ascenssion_dict["upgrade_scale"]
+    return upgrade_dict
 
-#if a save exists import it otherwise start the game new
+#if a save exists import it otherwise allow a new save to be genirated
 save = []
 try:
     with open("save.pkl", "rb") as fp:
@@ -23,17 +28,21 @@ try:
 except Exception as e:
     pass
 
+#first test if the save has the right amount of items in it and that its compatable with the current version of the game
 if len(save) == 5 and save[0] == 0.22001:
+    save_version = save[0]
     veriables_dict = save[1]
     ascenssion_dict = save[2]
     gen_list = save[3]
     upgrade_dict = save[4]
+#if no save exists then create one
 elif len(save) == 0:
     save_version = 0.22001
     veriables_dict = {"points": 0, "max_prestige": 5, "double_gen_ticks": 0, "tickspeed_boost_ticks": 0, "points_discount_boolean": False, "random_event_chance": 90}
     ascenssion_dict = {"ascenssion_count" : 0, "ascenssion_goal" : 100000, "starting prestige" : 5, "upgrade_scale" : 0, "gen_price_upgrade" : 1, "gen_val_upgrade" : 1, "starting_gen_amount" : 1}
     gen_list =  initilise_gens()
     upgrade_dict = initilise_upgrades()
+#this will raise and exception if a save exists but it isn't compatable with this version of the game
 else:
     raise Exception("save index wrong")
 
@@ -41,6 +50,7 @@ else:
 random.seed()
 running = True
 save_countdown = 30
+event_log = []
 
 first_ascenssion_upgrades = ["increase gen amount", "reduce gen price"]
 second_ascenssion_upgrades = ["increase max prestige by 5"]
@@ -62,7 +72,7 @@ def save_game():
         with open("save.pkl", "wb") as fp:
             pickle.dump(save, fp, protocol=pickle.HIGHEST_PROTOCOL)
 
-#this function takes the amount of points and amount of points in the unlock bank upgrade and uses to them to add a new tier of generator to the end gen list returning the cost of that new tier from the points total
+#this function takes the amount of points and amount of points in the unlock bank upgrade and uses to them to add a new tier of generator to the end gen list returning the amount that needs to be deducted from points
 def new_generator(is_free):
     new_gen_number = len(gen_list) + 1
     gen_list.append(Generator(new_gen_number, ascenssion_dict))
@@ -90,6 +100,8 @@ def ascend():
         time.sleep(2)
         ascenssion_dict["ascenssion_goal"] *= 10
         ascenssion_dict["ascenssion_count"] += 1
+        #bad luck protection is in place to make sure an even amount of certan upgrades are aquired early in the game
+        #this is done by testing the ascenssion that is taking place and then calling a reduced amount of options for the upgrade
         if ascenssion_dict["ascenssion_count"] == 1:
             ascenssion_upgrade = first_ascenssion_upgrades[random.randint(0, len(first_ascenssion_upgrades) - 1)]
         elif ascenssion_dict["ascenssion_count"] == 2:
@@ -98,6 +110,7 @@ def ascend():
             ascenssion_upgrade = third_ascenssion_upgrades[random.randint(0, len(third_ascenssion_upgrades) - 1)]
         elif ascenssion_dict["ascenssion_count"] == 4:
             ascenssion_upgrade = forth_ascenssion_upgrades[random.randint(0, len(forth_ascenssion_upgrades) - 1)]
+        #if bad luck protection is over it calls a full list of all avalable upgrades
         else:
             ascenssion_upgrade = ascenssion_upgrades[random.randint(0, len(ascenssion_upgrades) - 1)]
         if ascenssion_upgrade == "increase max prestige by 5":
@@ -146,6 +159,7 @@ def ascend():
         veriables_dict["points"] = 0 
         veriables_dict["double_gen_ticks"] = 0
         veriables_dict["tickspeed_boost_ticks"] = 0
+        veriables_dict["random_event_chance"] = 95
         save_game()
         return
 
@@ -203,7 +217,7 @@ def points_discount():
 def free_upgrade():
     valid_upgrade = False
     for upgrade in upgrade_dict:
-        if upgrade_dict[upgrade].tier < upgrade_dict[upgrade].max:
+        if upgrade_dict[upgrade].tier < upgrade_dict[upgrade].max_tier:
             valid_upgrade = True
     if valid_upgrade == False:
         return "No upgrades"
@@ -211,7 +225,7 @@ def free_upgrade():
     for i, key in enumerate(upgrade_dict.keys()):
         if i == random_upgrade:
             random_upgrade = key
-    if upgrade_dict[random_upgrade].tier >= upgrade_dict[random_upgrade].max:
+    if upgrade_dict[random_upgrade].tier >= upgrade_dict[random_upgrade].max_tier:
         free_upgrade()
     upgrade_dict[random_upgrade].tier += 1
     return f"{upgrade_dict[random_upgrade].name} increased to tier {upgrade_dict[random_upgrade].tier} for free"
@@ -249,12 +263,12 @@ def buy_upgrades(points_discount_boolean, upgrade_dict, event_log):
     global veriables_dict
     if points_discount_boolean == True:
         for upgrade in upgrade_dict:
-            if veriables_dict["points"] >= (upgrade_dict[upgrade].price * DISCOUNT) and upgrade_dict[upgrade].tier < upgrade_dict[upgrade].max:
+            if veriables_dict["points"] >= (upgrade_dict[upgrade].price * DISCOUNT) and upgrade_dict[upgrade].tier < upgrade_dict[upgrade].max_tier:
                 veriables_dict["points"] = upgrade_dict[upgrade].buy_discount(veriables_dict["points"])
                 event_log.append(f"{upgrade_dict[upgrade].name} Upgraded to rank {upgrade_dict[upgrade].tier}")
     else:
         for upgrade in upgrade_dict:
-            if veriables_dict["points"] >= upgrade_dict[upgrade].price and upgrade_dict[upgrade].tier < upgrade_dict[upgrade].max:
+            if veriables_dict["points"] >= upgrade_dict[upgrade].price and upgrade_dict[upgrade].tier < upgrade_dict[upgrade].max_tier:
                 veriables_dict["points"] = upgrade_dict[upgrade].buy(veriables_dict["points"])
                 event_log.append(f"{upgrade_dict[upgrade].name} Upgraded to rank {upgrade_dict[upgrade].tier}")
 
@@ -283,6 +297,29 @@ def buy_gens(points_discount_boolean, gen_list, upgrade_dict):
                     gen.buy(veriables_dict["points"])
                 veriables_dict["points"] -= buy_cost
 
+#this function takes the event log and tests if the event is a Generator prestiging by looking if the first word is "Generator"
+#then if more than 5 Generators have presteged in one tick it will replace all those messages with one message reporting how many presteged and how many got to the highest tier reached that tick
+def reduce_prestige_events(event_log):
+    prestige_count = 0
+    prestige_log = {}
+    for i in range(1, veriables_dict["max_prestige"] + 1):
+        prestige_log[f"{i}"] = 0
+    for event in event_log:
+        event_local = event.split()
+        if event_local[0] == "Generator":
+            prestige_count += 1
+            prestige_log[event_local[-1]] += 1
+    if prestige_count >= 4:
+        for event in list(event_log):
+            event_local = event.split()
+            if event_local[0] == "Generator":
+                event_log.remove(event)
+        for key, value in dict(prestige_log).items():
+            if value == 0:
+                del prestige_log[key]
+        event_log.append(f"{prestige_count} Generators have prestiged, {list(prestige_log.values())[-1]} of them reached prestige {list(prestige_log)[-1]}")
+    return event_log
+
 #this function prints out the report of what has happened each tick
 def print_report(gen_list, event_log, points_spent, points_generated, veriables_dict, upgrade_dict, ascenssion_dict):
     total_gens = 0
@@ -292,6 +329,9 @@ def print_report(gen_list, event_log, points_spent, points_generated, veriables_
     highest_gen = gen_list[0]
     
     print_break()
+
+    #reduce amount of messages in event log if too many gens prestiged at once
+    event_log = reduce_prestige_events(event_log)
 
     #this prints events that might not happen every tick
     for event in event_log:
@@ -315,7 +355,7 @@ def print_report(gen_list, event_log, points_spent, points_generated, veriables_
     if upgrade_dict["unlock_bank"].value > 0:
         print (f"You have {format(upgrade_dict["unlock_bank"].value, ",d")} points saved to unlock Tier {(len(gen_list) + 1)}")
 
-    #prints the current assesion goal about every 30 seconds bassed off the save countdown to save adding another
+    #prints the current assesion goal about every 30 seconds bassed off the save countdown to save adding another veriable
     if save_countdown == 1:
         if ascenssion_dict["ascenssion_count"] >= 1:
             print (f"You have ascended {ascenssion_dict["ascenssion_count"]} times \nYou need {format(ascenssion_dict["ascenssion_goal"], ",d")} points to Ascend")
@@ -327,9 +367,8 @@ def main():
     #this try statement is to allow the game to save if "closed" by keyboard interrupt
     try:
         while running == True:
-            #this keeps track of any notable events from the tick and reports them at the end
+            #reset part of the game that should only be held for one tick
             event_log = []
-            #reset any veriables that should only act for one tick
             veriables_dict["points_discount_boolean"] = False
             #random events to stop the game being determanistic
             if random.randint(1, 100) >= veriables_dict["random_event_chance"]:
@@ -358,18 +397,18 @@ def main():
                 if gen.amount > gen.prestige_cost and gen.prestige < veriables_dict["max_prestige"]:
                     gen_list.append(PrestigedGenerator(gen, ascenssion_dict))
                     gen_list.remove(gen)
-                    event_log.append(f"Generator {gen_list[-1].tier} has reached prestige {gen_list[-1].prestige}")
+                    event_log.append(f"Generator {format(gen_list[-1].tier, ",d")} has reached prestige {format(gen_list[-1].prestige, ",d")}")
                     gen_list.sort(key=lambda gens:gens.gen_price_ratio)
             #unlock new generator if possible
             if veriables_dict["points"] + upgrade_dict["unlock_bank"].value >= int((250 * (math.sqrt((len(gen_list) + 1) ** 1.9))) - 330):
                 veriables_dict["points"] -= new_generator(False)
-                event_log.append(f"Tier {len(gen_list)} unlocked")
+                event_log.append(f"Tier {format(len(gen_list), ",d")} unlocked")
                 gen_list.sort(key=lambda gens:gens.gen_price_ratio)
             #buy upgrades as they are fewer and more impactful than gens
             buy_upgrades(veriables_dict["points_discount_boolean"], upgrade_dict, event_log)
             #calls the function to buy more of already unlocked genirators
             buy_gens(veriables_dict["points_discount_boolean"], gen_list, upgrade_dict)
-
+            #takes a reading of how many points have been spent for the logs
             points_spent = points_start - veriables_dict["points"]
 
             #every tick reduce the time till the next auto save then if enough ticks have passed complete a save

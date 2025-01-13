@@ -1,4 +1,4 @@
-from constants import BASE_GEN, BASE_PRICE, DISCOUNT
+from constants import BASE_GEN, BASE_PRICE, DISCOUNT, MULTIBUY
 import math
 
 #Generators are the main way of genirating points, they start with values bassed on constants and there tier
@@ -17,7 +17,7 @@ class Generator():
         self.get_ratio()
 
     def __str__(self):
-        return f"Tier {self.tier} Generator"
+        return f"Tier {format(self.tier, ",d")} Generator"
 
     def get_gen(self, ascenssion_dict):
         if self.tier > 1:
@@ -44,7 +44,7 @@ class Generator():
             raise Exception("not enough points")
             return points
         else:
-            self.amount += 1
+            self.amount += MULTIBUY
             points_output = points - (self.price)
             return points_output
 
@@ -53,7 +53,7 @@ class Generator():
             raise Exception("not enough points")
             return points
         else:
-            self.amount += 1
+            self.amount += MULTIBUY
             points_output = points - int(self.price * DISCOUNT)
             return points_output
 
@@ -69,16 +69,16 @@ class PrestigedGenerator(Generator):
         self.get_ratio()
 
     def __str__(self):
-        return f"Prestige {self.prestige} Tier {self.tier} Generator"
+        return f"Prestige {format(self.prestige, ",d")} Tier {format(self.tier, ",d")} Generator"
 
 #Upgrades make the game easier and are upgrades in a similar way to generators
 
 class Upgrade():
-    def __init__(self, name, ascenssion_dict, price, multiplier, maximum):
+    def __init__(self, name, ascenssion_dict, price, multiplier, max_tier):
         self.name = name
         self.price = price
         self.multiplier = multiplier
-        self.max = maximum
+        self.max_tier = max_tier
         self.tier = 1 + ascenssion_dict["upgrade_scale"]
 
     def buy(self, points):
@@ -104,17 +104,18 @@ class Upgrade():
 #Some upgrades have to store a value beyond there tier this allows they to add and "spend" that value
 
 class UpgradeStoreValue(Upgrade):
-    def __init__(self, name, ascenssion_dict, price, multiplier, maximum, value_max):
-        super().__init__(name, ascenssion_dict, price, multiplier, maximum)
+    def __init__(self, name, ascenssion_dict, price, multiplier, max_tier, max_value, multipler_value):
+        super().__init__(name, ascenssion_dict, price, multiplier, max_tier)
         self.value = 0
-        self.value_max = value_max
+        self.max_value = max_value
+        self.multipler_value = multipler_value
 
     #this function takes the amount to add to the stored value and returns the amount thats been added
     def add_value(self, amount):
-        if self.value + amount > self.value_max:
+        if self.value + amount > self.max_value:
             diferance = self.value
-            self.value = self.value_max
-            return self.value_max - diferance
+            self.value = self.max_value
+            return self.max_value - diferance
         else:
             self.value += amount
             return amount
@@ -126,7 +127,7 @@ class UpgradeStoreValue(Upgrade):
         else:
             self.tier += 1
             points_local = points - self.price
-            self.value_max = int(self.value_max * self.multiplier)
+            self.max_value = int(self.max_value * self.multipler_value)
             self.price = int(self.price * self.multiplier)
             return points_local
 
@@ -137,6 +138,6 @@ class UpgradeStoreValue(Upgrade):
         else:
             self.tier += 1
             points_local = points - int(self.price * DISCOUNT)
-            self.value_max = int(self.value_max * self.multiplier)
+            self.max_value = int(self.max_value * self.multipler_value)
             self.price = int(self.price * self.multiplier)
             return points_local 
