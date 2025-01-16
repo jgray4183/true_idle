@@ -252,8 +252,6 @@ transcendence_dict = save[3]
 gen_list = save[4]
 upgrade_dict = save[5]
 
-print (ascenssion_dict)
-
 #establish anything not saved
 random.seed()
 running = True
@@ -691,7 +689,7 @@ def unlock_next_tier():
 
 #this rare event trys to buy as many new tiers of generators as you can afford from unlock bank, if you cant afford any it puts some money in your unlock bank
 def bank_run():
-    if upgrade_dict["unlock_bank"].value < int((250 * (math.sqrt((len(gen_list) + 1) ** 1.9))) - (330 * ascenssion_dict["gen_price_upgrade"])):
+    if upgrade_dict["unlock_bank"].value < int((250 * (math.sqrt((len(gen_list) + 1) ** 1.9))) - (330 * ascenssion_dict["gen_price_upgrade"])) or upgrade_dict["unlock_bank"].value < 1:
         upgrade_dict["unlock_bank"].value += int(upgrade_dict["unlock_bank"].max_value / 10)
         return "Bank Run failed"
     else:
@@ -700,7 +698,7 @@ def bank_run():
         while money_in_bank == True:
             new_generator(False)
             gens_unlocked += 1
-            if upgrade_dict["unlock_bank"].value < int((250 * (math.sqrt((len(gen_list) + 1) ** 1.9))) - (330 * ascenssion_dict["gen_price_upgrade"])):
+            if upgrade_dict["unlock_bank"].value < int((250 * (math.sqrt((len(gen_list) + 1) ** 1.9))) - (330 * ascenssion_dict["gen_price_upgrade"])) and upgrade_dict["unlock_bank"].value >= 1:
                 money_in_bank == False
     return f"You emptied your savings in a bank run and unlocked {gens_unlocked} new Tiers in the progress"
 
@@ -711,7 +709,7 @@ def print_break():
 #this tests if a new generator can be afforded and then calls the function if needed before adding this to the event log and sorting the list to make sure they are purcased in the right order
 def unlock_gen_test(upgrade_dict):
     global veriables_dict, gen_list
-    if veriables_dict["points"] + upgrade_dict["unlock_bank"].value >= int((250 * (math.sqrt((len(gen_list) + 1) ** 1.9))) - (330 * ascenssion_dict["gen_price_upgrade"])):
+    if veriables_dict["points"] + upgrade_dict["unlock_bank"].value >= int((250 * (math.sqrt((len(gen_list) + 1) ** 1.9))) - (330 * ascenssion_dict["gen_price_upgrade"])) and (veriables_dict["points"] + upgrade_dict["unlock_bank"].value) >= 1:
         veriables_dict["points"] -= new_generator(False)
         gen_list.sort(key=lambda gens:gens.gen_price_ratio)
 

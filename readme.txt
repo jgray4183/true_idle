@@ -12,7 +12,6 @@ To do
 Make numbers convert to scientific notation when they get large
 Add story
 Add final Transencance unlock (Anti Points)
-Improve random events
 
 ======================================================================================================================================================================================================
 Known bugs
