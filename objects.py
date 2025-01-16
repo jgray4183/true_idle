@@ -21,13 +21,13 @@ class Generator():
 
     def get_gen(self, ascenssion_dict):
         if self.tier > 1:
-            self.gen_val = int(1 + ((self.tier ** 1.3) / 2.4))
+            self.gen_val = int(1 + ((self.tier ** 1.3) / (2.4 / ascenssion_dict["gen_val_upgrade"])))
         else:
             self.gen_val = BASE_GEN ** self.tier
 
     def get_price(self, ascenssion_dict):
         if self.tier > 1:
-            self.price = int((250 * (math.sqrt(self.tier ** 1.9))) - 330)
+            self.price = int((250 * (math.sqrt(self.tier ** 1.9))) - (330 * ascenssion_dict["gen_price_upgrade"]))
         else:
             self.price = BASE_PRICE ** self.tier
         if self.price < 1:

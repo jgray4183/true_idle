@@ -252,6 +252,8 @@ transcendence_dict = save[3]
 gen_list = save[4]
 upgrade_dict = save[5]
 
+print (ascenssion_dict)
+
 #establish anything not saved
 random.seed()
 running = True
