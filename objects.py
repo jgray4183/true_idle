@@ -85,14 +85,14 @@ class Upgrade():
         self.price = price
         self.multiplier = multiplier
         self.max_tier = max_tier
-        self.tier = 1
+        self.tier = int(1)
 
     def buy(self, points):
         if self.price > points:
             raise Exception("not enough points")
             return points
         else:
-            self.tier += 1
+            self.tier += int(1)
             points_local = points - self.price
             self.price = int(self.price * self.multiplier)
             return points_local
@@ -102,7 +102,7 @@ class Upgrade():
             raise Exception("not enough points")
             return points
         else:
-            self.tier += 1
+            self.tier += int(1)
             points_local = points - int(self.price * DISCOUNT)
             self.price = int(self.price * self.multiplier)
             return points_local

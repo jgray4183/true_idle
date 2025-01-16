@@ -9,14 +9,15 @@ The game will save and exit if stopped with a keyboard interupt (CTRL + C)
 ======================================================================================================================================================================================================
 To do
 
-Add further pristege systems
 Make numbers convert to scientific notation when they get large
+Add story
+Add final Transencance unlock (Anti Points)
+Improve random events
 
 ======================================================================================================================================================================================================
 Known bugs
 
 Cost discount event dosen't apply to new tiers
-Random events are uncommon later in
 Converting a save can inflate upgrade bank value well beyond what it should be
 Converting saves might distort values
 
