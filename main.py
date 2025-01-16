@@ -100,7 +100,7 @@ def initilise_veriables_dict(transcendence_dict, ascenssion_dict):
     else:
         raise Exception("invalid save state")
         verify_transcendence_dict(transcendence_dict)
-        return def initilise_veriables_dict(transcendence_dict, ascenssion_dict)
+        return initilise_veriables_dict(transcendence_dict, ascenssion_dict)
     return veriables_dict
 
 #the list of genirators is a core part of the game and needs to be reset by mutiples functions in the game, it is also called when making a save
@@ -134,7 +134,7 @@ def convert_save(save):
         save_version = save[0]
         veriables_dict = save[1]
         ascenssion_dict = save[2]
-        transcendence_dict[3]
+        transcendence_dict = save[3]
         gen_list = save[4]
         upgrade_dict = save[5]
     else:
@@ -177,7 +177,7 @@ def convert_save(save):
     upgrade_dict_new = initilise_upgrades(transcendence_dict, ascenssion_dict)
     for upgrade in upgrade_dict_new:
         upgrade_dict_new[upgrade].tier = upgrade_dict[upgrade].tier
-        for i in range (upgrade_dict_new[upgrade].tier):
+        for i in range (int(upgrade_dict_new[upgrade].tier)):
             upgrade_dict_new[upgrade].price *= upgrade_dict_new[upgrade].multiplier
     #upgrades that hold value have extra veriables that need to be recaluculated
     for i in range(upgrade_dict_new["unlock_bank"].tier):
