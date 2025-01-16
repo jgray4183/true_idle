@@ -117,18 +117,19 @@ def initilise_upgrades(transcendence_dict, ascenssion_dict):
     for upgrade in upgrade_dict:
         upgrade_dict[upgrade].tier += ascenssion_dict["upgrade_scale"]
     if transcendence_dict["multi_unlock"] == True:
-        upgrade_dict["multi_unlock"] = Upgrade("Multiple Unlock", ascenssion_dict, 9000, 100, 5 + (ascenssion_dict["upgrade_scale"] / 5))
-        upgrade_dict["multi_unlock"].tier += (ascenssion_dict["upgrade_scale"] / 5)
+        upgrade_dict["multi_unlock"] = Upgrade("Multiple Unlock", ascenssion_dict, 9000, 100, 5 + int(ascenssion_dict["upgrade_scale"] / 5))
+        upgrade_dict["multi_unlock"].tier += int(ascenssion_dict["upgrade_scale"] / 5)
     if transcendence_dict["multi_buy"] == True:
-        upgrade_dict["multi_buy"] = Upgrade("Multiple Buy", ascenssion_dict, 3000000, 5000, 5 + (ascenssion_dict["upgrade_scale"] / 5))
-        upgrade_dict["multi_buy"].tier += (ascenssion_dict["upgrade_scale"] / 5)
+        upgrade_dict["multi_buy"] = Upgrade("Multiple Buy", ascenssion_dict, 3000000, 5000, 5 + int(ascenssion_dict["upgrade_scale"] / 5))
+        upgrade_dict["multi_buy"].tier += int(ascenssion_dict["upgrade_scale"] / 5)
     if transcendence_dict["random_buy"] == True:
-        upgrade_dict["random_buy"] = Upgrade("Random Buy", ascenssion_dict, 150000, 2000, 5 + (ascenssion_dict["upgrade_scale"] / 5))
-        upgrade_dict["random_buy"].tier += (ascenssion_dict["upgrade_scale"] / 5)
+        upgrade_dict["random_buy"] = Upgrade("Random Buy", ascenssion_dict, 150000, 2000, 5 + int(ascenssion_dict["upgrade_scale"] / 5))
+        upgrade_dict["random_buy"].tier += int(ascenssion_dict["upgrade_scale"] / 5)
     return upgrade_dict
 
 #this function will try and convert an old save to work on new versions of the game
 #THIS IS VERY STUPID AND COMPLEX PLEASE ADD NEW INDEX'S TO THE END OF THE SAVE
+#WHY DID I USE FLOATS FOR GAME VERSIONS, I MADE SO MANY BAD DECSIONS HERE
 def convert_save(save):
     if len(save) == 6:
         save_version = save[0]
@@ -670,7 +671,7 @@ def double_savings():
 
 def lucky_coin():
     veriables_dict["random_event_chance"] -= int(transcendence_dict["random_event_bonus"] / 5)
-    return f"Random event luck increased by {transcendence_dict["random_event_bonus"] / 5}%"
+    return f"Random event luck increased by {int(transcendence_dict["random_event_bonus"] / 5)}%"
 
 def increase_max_prestige():
     global veriables_dict
@@ -689,7 +690,7 @@ def unlock_next_tier():
 #this rare event trys to buy as many new tiers of generators as you can afford from unlock bank, if you cant afford any it puts some money in your unlock bank
 def bank_run():
     if upgrade_dict["unlock_bank"].value < int((250 * (math.sqrt((len(gen_list) + 1) ** 1.9))) - 330):
-        upgrade_dict["unlock_bank"].value += upgrade_dict["unlock_bank"].max_value / 10
+        upgrade_dict["unlock_bank"].value += int(upgrade_dict["unlock_bank"].max_value / 10)
         return "Bank Run failed"
     else:
         money_in_bank = True
@@ -849,7 +850,7 @@ def main():
                 veriables_dict["bad_luck_counter"] += 1
                 if veriables_dict["bad_luck_counter"] == 100:
                     veriables_dict["bad_luck_counter"] = 0
-                    veriables_dict["random_event_chance"] -= transcendence_dict["random_event_bonus"] / 5
+                    veriables_dict["random_event_chance"] -= int(transcendence_dict["random_event_bonus"] / 5)
             #take readings so I can report output changes
             points_generated = 0
             gen_number_start = len(gen_list)
