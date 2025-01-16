@@ -1,4 +1,4 @@
-from constants import BASE_GEN, BASE_PRICE, DISCOUNT, MULTIBUY
+from constants import BASE_GEN, BASE_PRICE, DISCOUNT
 import math
 
 #Generators are the main way of genirating points, they start with values bassed on constants and there tier
@@ -39,21 +39,27 @@ class Generator():
     def generate(self):
         return self.gen_val * self.amount
 
-    def buy(self, points):
+    def buy(self, points, upgrade_dict):
         if self.price > points:
             raise Exception("not enough points")
             return points
         else:
-            self.amount += MULTIBUY
+            if len(upgrade_dict) >= 5:
+                self.amount += upgrade_dict["multi_buy"].tier
+            else:
+                self.amount += 1
             points_output = points - (self.price)
             return points_output
 
-    def buy_discount(self, points):
+    def buy_discount(self, points, upgrade_dict):
         if int(self.price * DISCOUNT) > points:
             raise Exception("not enough points")
             return points
         else:
-            self.amount += MULTIBUY
+            if len(upgrade_dict) >= 5:
+                self.amount += upgrade_dict["multi_buy"].tier
+            else:
+                self.amount += 1
             points_output = points - int(self.price * DISCOUNT)
             return points_output
 
