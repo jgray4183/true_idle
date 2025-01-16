@@ -93,7 +93,7 @@ class Upgrade():
             return points
         else:
             self.tier += int(1)
-            points_local = points - self.price
+            points_local = points - int(self.price)
             self.price = int(self.price * self.multiplier)
             return points_local
 
@@ -131,8 +131,8 @@ class UpgradeStoreValue(Upgrade):
             raise Exception("not enough points")
             return points
         else:
-            self.tier += 1
-            points_local = points - self.price
+            self.tier += int(1)
+            points_local = points - int(self.price)
             self.max_value = int(self.max_value * self.multipler_value)
             self.price = int(self.price * self.multiplier)
             return points_local
@@ -142,7 +142,7 @@ class UpgradeStoreValue(Upgrade):
             raise Exception("not enough points")
             return points
         else:
-            self.tier += 1
+            self.tier += int(1)
             points_local = points - int(self.price * DISCOUNT)
             self.max_value = int(self.max_value * self.multipler_value)
             self.price = int(self.price * self.multiplier)

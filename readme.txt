@@ -20,6 +20,8 @@ Known bugs
 Cost discount event dosen't apply to new tiers
 Converting a save can inflate upgrade bank value well beyond what it should be
 Converting saves might distort values
+Upgrade tiers becoming floats (might be fixed?)
+Points becoming a float (might be fixed?)
 
 ======================================================================================================================================================================================================
 Version Numbers explained

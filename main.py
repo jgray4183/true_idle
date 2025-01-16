@@ -12,7 +12,7 @@ def verify_transcendence_dict(transcendence_dict):
     #first it makes sure the goal is correct
     transcendence_dict["trancendence_goal"] = 2500000
     for i in range(transcendence_dict["trancendence_count"]):
-        transcendence_dict["trancendence_goal"] * 500
+        transcendence_dict["trancendence_goal"] *= 500
     #verify all the boolian unlocks are correct
     if transcendence_dict["trancendence_count"] >= 1:
         transcendence_dict["multi_unlock"] = True
@@ -149,23 +149,20 @@ def convert_save(save):
     if save_version < GAME_VERSION:
         old_save_version = save_version
         save_version = GAME_VERSION
-    
     #this tests if the old save is before save numbers and converts it to the new save format
     if points == int:
         veriables_dict = {"points": save[0], "max_prestige": save[1], "double_gen_ticks": save[2], "tickspeed_boost_ticks": save[3], "points_discount_boolean": save[4], "random_event_chance": 100}
         ascenssion_dict = save[5]
         gen_list = save[6]
         upgrade_dict = save[7]
-
+    #makes sure the save has the correct transcendance information
     elif old_save_version < 0.23001:
         transcendence_dict = {"trancendence_count": 0, "trancendence_goal": 2500000, "multi_unlock": False, "random_event_bonus": 5, "ascenssion_scaling": 10, "improved_ascenssion": False, "multi_buy": False, "random_buy": False, "tickspeed_cap_reduced": False, "remove_max_prestige": False, "keep_upgrades": False, "keep_prestige": False, "keep_points": False, "keep_gens": False}
         if old_save_version > 0.21001:
             gen_list = save[3]
             upgrade_dict = save[4]
     elif old_save_version < GAME_VERSION:
-        verify_transcendence_dict(transcendence_dict)
-
-    
+        transcendence_dict = verify_transcendence_dict(transcendence_dict)
     #this regenirates anything that has been changed since old saves
     for gen in list(gen_list):
         new_gen = Generator(gen.tier, ascenssion_dict)
@@ -188,7 +185,6 @@ def convert_save(save):
         upgrade_dict_new["unlock_bank"].value = upgrade_dict_new["unlock_bank"].max_value
     #changes the original upgrade dict to the new one
     upgrade_dict = upgrade_dict_new
-    
     #repack and return the save
     save = [save_version, veriables_dict, ascenssion_dict, transcendence_dict, gen_list, upgrade_dict]
     return save
@@ -318,9 +314,9 @@ def transcend():
         raise Exception("not enough points")
         return None
     else:
-        print_break
+        print_break()
         print (transcend_askii)
-        print_break
+        print_break()
         time.sleep(2)
         transcendence_dict["trancendence_goal"] *= 500
         transcendence_dict["trancendence_count"] += 1
@@ -449,7 +445,7 @@ def ascend():
         print (ascended_askii)
         print_break()
         time.sleep(2)
-        ascenssion_dict["ascenssion_goal"] *= transcendence_dict["ascenssion_scaling"]
+        ascenssion_dict["ascenssion_goal"] = int((ascenssion_dict["ascenssion_goal"] * transcendence_dict["ascenssion_scaling"]))
         ascenssion_dict["ascenssion_count"] += 1
         #bad luck protection is in place to make sure an even amount of certan upgrades are aquired early in the game
         #this is done by testing the ascenssion that is taking place and then calling a reduced amount of options for the upgrade
@@ -840,11 +836,15 @@ def main():
             #unlock new generator if possible, first trying to do mutiple times if the "multi unlock" upgrade is unlocked, then doing just once if not
             if transcendence_dict["multi_unlock"] == True:
                 for i in range(int(upgrade_dict["multi_unlock"].tier)):
+                    gen_len = len(gen_list)
                     unlock_gen_test(upgrade_dict)
-                    event_log.append(f"Tier {format(len(gen_list), ",d")} unlocked")
+                    if len(gen_list) > gen_len:
+                        event_log.append(f"Tier {format(len(gen_list), ",d")} unlocked")
             else:
+                gen_len = len(gen_list)
                 unlock_gen_test(upgrade_dict)
-                event_log.append(f"Tier {format(len(gen_list), ",d")} unlocked")
+                if len(gen_list) > gen_len:
+                        event_log.append(f"Tier {format(len(gen_list), ",d")} unlocked")
             #buy upgrades as they are fewer and more impactful than gens
             buy_upgrades(veriables_dict["points_discount_boolean"], upgrade_dict, event_log)
             #if "random buy" upgrade is unlocked try to buy two random number gens before doing the normal buying process
