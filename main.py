@@ -92,14 +92,14 @@ def initilise_ascenssion_dict(transcendence_dict):
 #this dict contains all the veriables needed for the game, it has to be reset mutiple times in the game
 def initilise_veriables_dict(transcendence_dict, ascenssion_dict):
     if transcendence_dict["keep_prestige"] == False and transcendence_dict["keep_points"] == False:
-        veriables_dict = {"points": 0, "max_prestige": ascenssion_dict["starting_prestige"], "double_gen_ticks": 0, "tickspeed_boost_ticks": 0, "points_discount_boolean": False, "random_event_chance": 100}
+        veriables_dict = {"points": 0, "max_prestige": ascenssion_dict["starting_prestige"], "double_gen_ticks": 0, "tickspeed_boost_ticks": 0, "points_discount_boolean": False, "random_event_chance": 100, "bad_luck_counter": 0}
     elif transcendence_dict["keep_prestige"] == True and transcendence_dict["keep_points"] == False:
-        veriables_dict = {"points": 0, "max_prestige": veriables_dict["max_prestige"], "double_gen_ticks": 0, "tickspeed_boost_ticks": 0, "points_discount_boolean": False, "random_event_chance": 100}
+        veriables_dict = {"points": 0, "max_prestige": veriables_dict["max_prestige"], "double_gen_ticks": 0, "tickspeed_boost_ticks": 0, "points_discount_boolean": False, "random_event_chance": 100, "bad_luck_counter": 0}
     elif transcendence_dict["keep_prestige"] == True and transcendence_dict["keep_points"] == True:
-        veriables_dict = {"points": veriables_dict["points"], "max_prestige": veriables_dict["max_prestige"], "double_gen_ticks": 0, "tickspeed_boost_ticks": 0, "points_discount_boolean": False, "random_event_chance": 100}
+        veriables_dict = {"points": veriables_dict["points"], "max_prestige": veriables_dict["max_prestige"], "double_gen_ticks": 0, "tickspeed_boost_ticks": 0, "points_discount_boolean": False, "random_event_chance": 100, "bad_luck_counter": 0}
     else:
         raise Exception("invalid save state")
-        verify_transcendence_dict(transcendence_dict)
+        transcendence_dict = verify_transcendence_dict(transcendence_dict)
         return initilise_veriables_dict(transcendence_dict, ascenssion_dict)
     return veriables_dict
 
@@ -156,13 +156,16 @@ def convert_save(save):
         gen_list = save[6]
         upgrade_dict = save[7]
     #makes sure the save has the correct transcendance information
-    elif old_save_version < 0.23001:
+    elif math.isclose(old_save_version, 0.23001) or old_save_version < 0.23001:
         transcendence_dict = {"trancendence_count": 0, "trancendence_goal": 2500000, "multi_unlock": False, "random_event_bonus": 5, "ascenssion_scaling": 10, "improved_ascenssion": False, "multi_buy": False, "random_buy": False, "tickspeed_cap_reduced": False, "remove_max_prestige": False, "keep_upgrades": False, "keep_prestige": False, "keep_points": False, "keep_gens": False}
         if old_save_version > 0.21001:
             gen_list = save[3]
             upgrade_dict = save[4]
     elif old_save_version < GAME_VERSION:
         transcendence_dict = verify_transcendence_dict(transcendence_dict)
+    #adds bad luck counter to veriables dict if save is from before it was added
+    if math.isclose(old_save_version, 0.23010) or old_save_version < 0.23010:
+        veriables_dict["bad_luck_counter"] = 0
     #this regenirates anything that has been changed since old saves
     for gen in list(gen_list):
         new_gen = Generator(gen.tier, ascenssion_dict)
@@ -260,9 +263,9 @@ third_ascenssion_upgrades = ["increase all upgrades", "increase starting gen num
 forth_ascenssion_upgrades = ["increase all upgrades", "reduce gen price", "increase gen amount", "increase starting gen number"]
 ascenssion_upgrades = ["increase max prestige by 5", "increase all upgrades", "reduce gen price", "increase gen amount", "increase starting gen number"]
 
-ultra_rare_events = ["increase max prestige", "double gen for rounds", "unlock next tier"]
-medium_rare_events = ["free upgrade", "free gens", "double savings"]
-normal_rare_events = ["points discount", "tickspeed boost", "double points"]
+ultra_rare_events = ["increase max prestige", "double gen for rounds", "free gens", "bank run"]
+medium_rare_events = ["free upgrade", "unlock next tier", "double savings", "lucky coin"]
+normal_rare_events = ["points discount", "tickspeed boost", "double points", "hard times"]
 
 #this function saves the game as a pickled list and creates a save if one dosen't exist
 def save_game():
@@ -314,6 +317,10 @@ def transcend():
         raise Exception("not enough points")
         return None
     else:
+        if len(event_log) > 0:
+            if event_log[0] == "Random Event! Point gen doubled this tick" or event_log[0].split[2] == "Geniration":
+                print_break()
+                print ("Point gen doubled this tick")
         print_break()
         print (transcend_askii)
         print_break()
@@ -437,15 +444,19 @@ def transcend():
 #first it applies these upgrades then dose the reset
 def ascend():
     global veriables_dict, ascenssion_dict, upgrade_dict, gen_list
-    if veriables_dict["points"] < ascenssion_dict["ascenssion_goal"]:
+    if veriables_dict["points"] < int(ascenssion_dict["ascenssion_goal"]):
         raise Exception("not enough points")
         return None
     else:
+        if len(event_log) > 0:
+            if event_log[0] == "Random Event! Point gen doubled this tick" or event_log[0].split[2] == "Geniration":
+                print_break()
+                print ("Point gen doubled this tick")
         print_break()
         print (ascended_askii)
         print_break()
         time.sleep(2)
-        ascenssion_dict["ascenssion_goal"] = int((ascenssion_dict["ascenssion_goal"] * transcendence_dict["ascenssion_scaling"]))
+        ascenssion_dict["ascenssion_goal"] = int((int(ascenssion_dict["ascenssion_goal"]) * transcendence_dict["ascenssion_scaling"]))
         ascenssion_dict["ascenssion_count"] += 1
         #bad luck protection is in place to make sure an even amount of certan upgrades are aquired early in the game
         #this is done by testing the ascenssion that is taking place and then calling a reduced amount of options for the upgrade
@@ -582,16 +593,20 @@ def random_event_genirator(event_log):
             event_log.append(f"Random Event! {increase_max_prestige()}")
         if event == "double gen for rounds":
             event_log.append(f"Random Event! {double_gen()}")
-        if event == "unlock next tier":
-            event_log.append(f"Random Event! {unlock_next_tier()}")
+        if event == "free gens":
+            event_log.append(f"Random Event! {free_gens()}")
+        if event == "bank run":
+            event_log.append(f"Random Event! {bank_run()}")
     if roll >= 60 and roll < 90:
         event = medium_rare_events[random.randint(0, len(ultra_rare_events) - 1)]
         if event == "free upgrade":
             event_log.append(f"Random Event! {free_upgrade()}")
-        if event == "free gens":
-            event_log.append(f"Random Event! {free_gens()}")
+        if event == "unlock next tier":
+            event_log.append(f"Random Event! {unlock_next_tier()}")
         if event == "double savings":
             event_log.append(f"Random Event! {double_savings()}")
+        if event == "lucky coin":
+            event_log.append(f"Random Event! {lucky_coin()}")
     if roll < 60:
         event = normal_rare_events[random.randint(0, len(ultra_rare_events) - 1)]
         if event == "points discount":
@@ -600,6 +615,8 @@ def random_event_genirator(event_log):
             event_log.append(f"Random Event! {tickspeed_boost()}")
         if event == "double points":
             event_log.append(f"Random Event! {double_points()}")
+        if event == "hard times":
+            event_log.append(f"Random Event! {hard_times()}")
     return event_log
 
 #random event functions
@@ -619,6 +636,12 @@ def points_discount():
     global veriables_dict
     veriables_dict["points_discount_boolean"] = True
     return "Costs discounted this tick"
+
+def hard_times():
+    random_gen = gen_list[random.randint(0, len(gen_list))]
+    gen_list.append(PrestigedGenerator(random_gen, ascenssion_dict))
+    gen_list.remove(random_gen)
+    return f"Prestiged Generator {format(random_gen.tier, ",d")} as a random act of kindness"
 
 def free_upgrade():
     valid_upgrade = False
@@ -645,6 +668,10 @@ def double_savings():
     upgrade_dict["unlock_bank"].add_value(upgrade_dict["unlock_bank"].value)
     return "Savings doubled"
 
+def lucky_coin():
+    veriables_dict["random_event_chance"] -= int(transcendence_dict["random_event_bonus"] / 5)
+    return f"Random event luck increased by {transcendence_dict["random_event_bonus"] / 5}%"
+
 def increase_max_prestige():
     global veriables_dict
     veriables_dict["max_prestige"] += 1
@@ -658,6 +685,21 @@ def double_gen():
 def unlock_next_tier():
     new_generator(True)
     return "Next Tier unlocked for free"
+
+#this rare event trys to buy as many new tiers of generators as you can afford from unlock bank, if you cant afford any it puts some money in your unlock bank
+def bank_run():
+    if upgrade_dict["unlock_bank"].value < int((250 * (math.sqrt((len(gen_list) + 1) ** 1.9))) - 330):
+        upgrade_dict["unlock_bank"].value += upgrade_dict["unlock_bank"].max_value / 10
+        return "Bank Run failed"
+    else:
+        money_in_bank = True
+        gens_unlocked = 0
+        while money_in_bank == True:
+            new_generator(False)
+            gens_unlocked += 1
+            if upgrade_dict["unlock_bank"].value < int((250 * (math.sqrt((len(gen_list) + 1) ** 1.9))) - 330):
+                money_in_bank == False
+    return f"You emptied your savings in a bank run and unlocked {gens_unlocked} new Tiers in the progress"
 
 #commonly used print
 def print_break():
@@ -784,13 +826,13 @@ def print_report(gen_list, event_log, points_spent, points_generated, veriables_
     #prints the current assesion goal about every 30 seconds bassed off the save countdown to save adding another veriable
     if save_countdown == 1:
         if ascenssion_dict["ascenssion_count"] >= 1 and transcendence_dict["trancendence_count"] == 0:
-            print (f"You have ascended {ascenssion_dict["ascenssion_count"]} times \nYou need {format(ascenssion_dict["ascenssion_goal"], ",d")} points to Ascend")
+            print (f"You have ascended {ascenssion_dict["ascenssion_count"]} times \nYou need {format(int(ascenssion_dict["ascenssion_goal"]), ",d")} points to Ascend")
             print (f"You need {format(transcendence_dict["trancendence_goal"], ",d")} points to Trancend")
         elif transcendence_dict["trancendence_count"] >= 1:
-            print (f"You have ascended {ascenssion_dict["ascenssion_count"]} times \nYou need {format(ascenssion_dict["ascenssion_goal"], ",d")} points to Ascend")
+            print (f"You have ascended {ascenssion_dict["ascenssion_count"]} times \nYou need {format(int(ascenssion_dict["ascenssion_goal"]), ",d")} points to Ascend")
             print (f"You have Trancended {transcendence_dict["trancendence_count"]} times \nYou need {format(transcendence_dict["trancendence_goal"], ",d")} points to Trancend")
         else:
-            print (f"You need {format(ascenssion_dict["ascenssion_goal"], ",d")} points to Ascend")
+            print (f"You need {format(int(ascenssion_dict["ascenssion_goal"]), ",d")} points to Ascend")
 
 def main():
     global veriables_dict, save_countdown
@@ -803,6 +845,11 @@ def main():
             #random events to stop the game being determanistic
             if random.randint(1, 100) >= veriables_dict["random_event_chance"]:
                 event_log = random_event_genirator(event_log)
+            else:
+                veriables_dict["bad_luck_counter"] += 1
+                if veriables_dict["bad_luck_counter"] == 100:
+                    veriables_dict["bad_luck_counter"] = 0
+                    veriables_dict["random_event_chance"] -= transcendence_dict["random_event_bonus"] / 5
             #take readings so I can report output changes
             points_generated = 0
             gen_number_start = len(gen_list)
@@ -821,7 +868,7 @@ def main():
                 transcend()
                 continue
             #ascend if possible
-            if veriables_dict["points"] >= ascenssion_dict["ascenssion_goal"]:
+            if veriables_dict["points"] >= int(ascenssion_dict["ascenssion_goal"]):
                 ascend()
                 continue
             #take readings for how many points have been genirated then reset point starts to track points spent
@@ -850,7 +897,7 @@ def main():
             #if "random buy" upgrade is unlocked try to buy two random number gens before doing the normal buying process
             if transcendence_dict["random_buy"] == True:
                 for i in range(upgrade_dict["random_buy"].tier * 2):
-                    gen_list[random.randomint(1, len(gen_list))].buy_discount(veriables_dict["points"], upgrade_dict)
+                    veriables_dict["points"] = gen_list[random.randomint(1, len(gen_list))].buy_discount(veriables_dict["points"], upgrade_dict)
             #calls the function to buy more of already unlocked genirators
             buy_gens(veriables_dict["points_discount_boolean"], gen_list, upgrade_dict)
             #takes a reading of how many points have been spent for the logs
