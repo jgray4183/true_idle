@@ -639,7 +639,7 @@ def points_discount():
     return "Costs discounted this tick"
 
 def hard_times():
-    random_gen = gen_list[random.randint(0, len(gen_list))]
+    random_gen = gen_list[random.randint(0, len(gen_list) - 1)]
     gen_list.append(PrestigedGenerator(random_gen, ascenssion_dict))
     gen_list.remove(random_gen)
     return f"Prestiged Generator {format(random_gen.tier, ",d")} as a random act of kindness"
@@ -698,9 +698,11 @@ def bank_run():
         while money_in_bank == True:
             new_generator(False)
             gens_unlocked += 1
+            if gens_unlocked >= 1000:
+                money_in_bank = False
             if upgrade_dict["unlock_bank"].value < int((250 * (math.sqrt((len(gen_list) + 1) ** 1.9))) - (330 * ascenssion_dict["gen_price_upgrade"])) and upgrade_dict["unlock_bank"].value >= 1:
-                money_in_bank == False
-    return f"You emptied your savings in a bank run and unlocked {gens_unlocked} new Tiers in the progress"
+                money_in_bank = False
+    return f"You emptied your savings in a bank run and unlocked {format(gens_unlocked, ",d")} new Tiers in the progress"
 
 #commonly used print
 def print_break():
@@ -809,29 +811,37 @@ def print_report(gen_list, event_log, points_spent, points_generated, veriables_
         else:
             print (event)
 
+    report_numbers = {"points_generated": points_generated, "points_spent": points_spent, "total_gens": total_gens, "highest_gen_amount": highest_gen.amount, "points": veriables_dict["points"], "unlock_bank_value": upgrade_dict["unlock_bank"].value, "next_gen": len(gen_list) + 1, "ascenssion_goal": int(ascenssion_dict["ascenssion_goal"]), "trancendence_goal": int(transcendence_dict["trancendence_goal"])}
+
+    for value in report_numbers:
+        if report_numbers[value] >= 1000000000:
+            report_numbers[value] = format(report_numbers[value], ".2e")
+        else:
+            report_numbers[value] = format(report_numbers[value], ",d")
+
     #this prints the points genirated, points spent if any were, running genirator count, and points total so this statement will print every tick, conditions to keep grama correct and provent empty statements
     if highest_gen.amount == 1:
         if points_spent > 0:
-            print(f"{format(points_generated, ",d")} points generated \n{format(points_spent, ",d")} points spent \nYou have {format(total_gens, ",d")} generators, {highest_gen.amount} is a {highest_gen} \nNew Points {format(veriables_dict["points"], ",d")}")
+            print(f"{report_numbers["points_generated"]} points generated \n{report_numbers["points_spent"]} points spent \nYou have {report_numbers["total_gens"]} generators, {highest_gen.amount} is a {highest_gen} \nNew Points {report_numbers["points"]}")
         else:
-            print(f"{format(points_generated, ",d")} points generated \nYou have {format(total_gens, ",d")} generators, {highest_gen.amount} is a {highest_gen} \nNew Points {format(veriables_dict["points"], ",d")}") 
+            print(f"{report_numbers["points_generated"]} points generated \nYou have {report_numbers["total_gens"]} generators, {highest_gen.amount} is a {highest_gen} \nNew Points {report_numbers["points"]}") 
     else:
         if points_spent > 0:
-            print(f"{format(points_generated, ",d")} points generated \n{format(points_spent, ",d")} points spent \nYou have {format(total_gens, ",d")} generators, {format(highest_gen.amount, ",d")} are {highest_gen}s \nNew Points {format(veriables_dict["points"], ",d")}")
+            print(f"{report_numbers["points_generated"]} points generated \n{report_numbers["points_spent"]} points spent \nYou have {report_numbers["total_gens"]} generators, {report_numbers["highest_gen_amount"]} are {highest_gen}s \nNew Points {report_numbers["points"]}")
         else:
-            print(f"{format(points_generated, ",d")} points generated \nYou have {format(total_gens, ",d")} generators, {format(highest_gen.amount, ",d")} are {highest_gen}s \nNew Points {format(veriables_dict["points"], ",d")}")
+            print(f"{report_numbers["points_generated"]} points generated \nYou have {report_numbers["total_gens"]} generators, {report_numbers["highest_gen_amount"]} are {highest_gen}s \nNew Points {report_numbers["points"]}")
 
     if upgrade_dict["unlock_bank"].value > 0:
-        print (f"You have {format(upgrade_dict["unlock_bank"].value, ",d")} points saved to unlock Tier {(len(gen_list) + 1)}")
+        print (f"You have {report_numbers["unlock_bank_value"]} points saved to unlock Tier {report_numbers["next_gen"]}")
 
     #prints the current assesion goal about every 30 seconds bassed off the save countdown to save adding another veriable
     if save_countdown == 1:
         if ascenssion_dict["ascenssion_count"] >= 1 and transcendence_dict["trancendence_count"] == 0:
-            print (f"You have ascended {ascenssion_dict["ascenssion_count"]} times \nYou need {format(int(ascenssion_dict["ascenssion_goal"]), ",d")} points to Ascend")
-            print (f"You need {format(transcendence_dict["trancendence_goal"], ",d")} points to Trancend")
+            print (f"You have ascended {ascenssion_dict["ascenssion_count"]} times \nYou need {report_numbers["ascenssion_goal"]} points to Ascend")
+            print (f"You need {report_numbers["trancendence_goal"]} points to Trancend")
         elif transcendence_dict["trancendence_count"] >= 1:
-            print (f"You have ascended {ascenssion_dict["ascenssion_count"]} times \nYou need {format(int(ascenssion_dict["ascenssion_goal"]), ",d")} points to Ascend")
-            print (f"You have Trancended {transcendence_dict["trancendence_count"]} times \nYou need {format(transcendence_dict["trancendence_goal"], ",d")} points to Trancend")
+            print (f"You have ascended {ascenssion_dict["ascenssion_count"]} times \nYou need {report_numbers["ascenssion_goal"]} points to Ascend")
+            print (f"You have Trancended {transcendence_dict["trancendence_count"]} times \nYou need {report_numbers["trancendence_goal"]} points to Trancend")
         else:
             print (f"You need {format(int(ascenssion_dict["ascenssion_goal"]), ",d")} points to Ascend")
 
@@ -896,9 +906,9 @@ def main():
             #buy upgrades as they are fewer and more impactful than gens
             buy_upgrades(veriables_dict["points_discount_boolean"], upgrade_dict, event_log)
             #if "random buy" upgrade is unlocked try to buy two random number gens before doing the normal buying process
-            if transcendence_dict["random_buy"] == True:
+            if transcendence_dict["random_buy"] == True and len(gen_list) >= 10:
                 for i in range(upgrade_dict["random_buy"].tier * 2):
-                    veriables_dict["points"] = gen_list[random.randomint(1, len(gen_list))].buy_discount(veriables_dict["points"], upgrade_dict)
+                    veriables_dict["points"] = gen_list[random.randint(1, len(gen_list) - 1)].buy_discount(veriables_dict["points"], upgrade_dict) 
             #calls the function to buy more of already unlocked genirators
             buy_gens(veriables_dict["points_discount_boolean"], gen_list, upgrade_dict)
             #takes a reading of how many points have been spent for the logs

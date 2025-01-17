@@ -41,10 +41,9 @@ class Generator():
 
     def buy(self, points, upgrade_dict):
         if self.price > points:
-            raise Exception("not enough points")
             return points
         else:
-            if len(upgrade_dict) >= 5:
+            if len(upgrade_dict) >= 6:
                 self.amount += upgrade_dict["multi_buy"].tier
             else:
                 self.amount += 1
@@ -53,10 +52,9 @@ class Generator():
 
     def buy_discount(self, points, upgrade_dict):
         if int(self.price * DISCOUNT) > points:
-            raise Exception("not enough points")
             return points
         else:
-            if len(upgrade_dict) >= 5:
+            if len(upgrade_dict) >= 6:
                 self.amount += upgrade_dict["multi_buy"].tier
             else:
                 self.amount += 1
